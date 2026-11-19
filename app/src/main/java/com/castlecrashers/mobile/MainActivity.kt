@@ -43,104 +43,152 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
     private fun text(s: String, size: Float = 14f, color: Int = 0xffeee9df.toInt()) =
         TextView(this).apply { text = s; textSize = size; setTextColor(color) }
 
+    private var launchInProgress = false
+
     private fun home() {
-        val scroll = ScrollView(this).apply {
-            setBackgroundColor(0xff0b101a.toInt())
-            isFillViewport = true
-        }
-        val page = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(22), dp(18), dp(28))
-            setBackgroundColor(0xff0b101a.toInt())
-        }
+        requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        window.decorView.systemUiVisibility = (
+            View.SYSTEM_UI_FLAG_FULLSCREEN or
+            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        )
 
-        val top = LinearLayout(this).apply {
+        val root = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
+            setBackgroundColor(0xffff884d.toInt())
+            setPadding(dp(12), dp(10), dp(12), dp(10))
         }
-        val brand = text("♜", 28f, 0xffffc45f.toInt())
-        top.addView(brand, LinearLayout.LayoutParams(dp(42), dp(44)))
-        val brandText = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        brandText.addView(text("CASTLE CRASHERS", 16f, 0xffffe8bd.toInt()))
-        brandText.addView(text("MOBILE  •  VERSÃO 1.0.0", 10f, 0xff9ca9bd.toInt()))
-        top.addView(brandText)
-        page.addView(top)
-        page.addView(gap(18))
 
-        val hero = LinearLayout(this).apply {
+        val menu = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(22), dp(20), dp(22))
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(dp(8), dp(4), dp(10), dp(4))
+        }
+        root.addView(menu, LinearLayout.LayoutParams(0, -1, 0.43f))
+
+        val logo = text("CASTLE", 30f, 0xff171321.toInt()).apply {
+            typeface = android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD_ITALIC)
+            letterSpacing = 0.22f
+            setShadowLayer(dp(2).toFloat(), dp(1).toFloat(), dp(2).toFloat(), 0xffffffff.toInt())
+        }
+        val logo2 = text("CRASHERS", 29f, 0xffe52c26.toInt()).apply {
+            typeface = android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD_ITALIC)
+            letterSpacing = 0.03f
+            setShadowLayer(dp(2).toFloat(), dp(1).toFloat(), dp(2).toFloat(), 0xff171321.toInt())
+        }
+        menu.addView(logo)
+        menu.addView(logo2)
+        menu.addView(text("STEAM EDITION  •  ANDROID", 9f, 0xfffff2dc.toInt()))
+        menu.addView(gap(10))
+
+        menu.addView(menuButton("LOCAL GAME", 0xffffa000.toInt()) { startGame() })
+        menu.addView(menuButton("ONLINE MULTIPLAYER", 0xff397ce0.toInt()) {
+            AlertDialog.Builder(this).setTitle("Online Multiplayer")
+                .setMessage("O modo online/Steamworks ainda não está integrado. Você pode jogar localmente com controles conectados ao Winlator.")
+                .setPositiveButton("OK", null).show()
+        })
+        menu.addView(menuButton("HELP  &  OPTIONS", 0xff38b85a.toInt()) { settings() })
+        menu.addView(menuButton("DOWNLOAD CONTENT", 0xff974bd5.toInt()) { chooseFolder() })
+
+        val shortcuts = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER
+        }
+        shortcuts.addView(menuSmallButton("🏆") { diagnoseGame() }, LinearLayout.LayoutParams(0, dp(48), 1f))
+        shortcuts.addView(menuSmallButton("♟") { touchInfo() }, LinearLayout.LayoutParams(0, dp(48), 1f))
+        shortcuts.addView(menuSmallButton("▥") { settings() }, LinearLayout.LayoutParams(0, dp(48), 1f))
+        menu.addView(shortcuts)
+        menu.addView(gap(8))
+
+        val footer = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        footer.addView(menuFooterButton("QUIT", 0xff656565.toInt()) { finish() }, LinearLayout.LayoutParams(0, dp(44), 1f))
+        footer.addView(menuFooterButton("MERCH", 0xffe85a9a.toInt()) {
+            AlertDialog.Builder(this).setTitle("Castle Crashers")
+                .setMessage("A loja e o conteúdo comercial do jogo abrem pela página oficial do jogo.")
+                .setPositiveButton("OK", null).show()
+        }, LinearLayout.LayoutParams(0, dp(44), 1f))
+        menu.addView(footer)
+
+        val artPanel = FrameLayout(this).apply {
+            setPadding(dp(4), dp(4), dp(4), dp(4))
+            background = rounded(0xffffb45e.toInt(), 0xffffe6ad.toInt())
+        }
+        val art = ImageView(this).apply {
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            contentDescription = "Arte oficial de Castle Crashers para PC"
+            setImageResource(R.drawable.castle_header)
+            background = rounded(0xffd96b42.toInt(), 0xffffd28a.toInt())
+        }
+        artPanel.addView(art, FrameLayout.LayoutParams(-1, -1))
+        root.addView(artPanel, LinearLayout.LayoutParams(0, -1, 0.57f))
+
+        devices = text("CONTROLES: procurando dispositivos…", 9f, 0xff27202a.toInt())
+        devices.setPadding(dp(8), dp(3), dp(8), dp(3))
+        devices.gravity = android.view.Gravity.CENTER
+        status = text("Selecione LOCAL GAME para iniciar.", 10f, 0xff27202a.toInt())
+        status.gravity = android.view.Gravity.CENTER
+        val page = FrameLayout(this)
+        page.addView(root, FrameLayout.LayoutParams(-1, -1))
+        val info = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(0x99fff0d8.toInt())
+            addView(status)
+            addView(devices)
+        }
+        page.addView(info, FrameLayout.LayoutParams(-1, dp(34), android.view.Gravity.BOTTOM))
+        setContentView(page)
+    }
+
+    private fun menuButton(label: String, color: Int, action: () -> Unit): View {
+        val button = TextView(this).apply {
+            text = label
+            textSize = 15f
+            gravity = android.view.Gravity.CENTER
+            typeface = android.graphics.Typeface.create("sans-serif-condensed", android.graphics.Typeface.BOLD)
+            setTextColor(0xff26202a.toInt())
+            setPadding(dp(8), dp(7), dp(8), dp(7))
             background = android.graphics.drawable.GradientDrawable(
-                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                intArrayOf(0xff34435f.toInt(), 0xff1b263a.toInt(), 0xff171c2b.toInt())
-            ).apply {
-                cornerRadius = dp(22).toFloat()
-                setStroke(dp(1), 0xff65718a.toInt())
+                android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(0xfffff0c9.toInt(), color, color)
+            ).apply { cornerRadius = dp(11).toFloat(); setStroke(dp(3), 0xffffe8c2.toInt()) }
+            isClickable = true
+            isFocusable = true
+            elevation = dp(3).toFloat()
+            setOnClickListener { action() }
+        }
+        button.layoutParams = LinearLayout.LayoutParams(-1, dp(43)).apply { bottomMargin = dp(5) }
+        return button
+    }
+
+    private fun menuSmallButton(label: String, action: () -> Unit): View =
+        TextView(this).apply {
+            text = label
+            textSize = 22f
+            gravity = android.view.Gravity.CENTER
+            setTextColor(-1)
+            background = rounded(0xffd84b4b.toInt(), 0xffffd8c0.toInt())
+            isClickable = true
+            setOnClickListener { action() }
+            layoutParams = LinearLayout.LayoutParams(0, dp(46), 1f).apply {
+                marginStart = dp(3); marginEnd = dp(3)
             }
         }
-        val artwork = ImageView(this).apply {
-            // Banner art will be supplied as a licensed fan/official image; do not generate replacement artwork.
-            background = android.graphics.drawable.GradientDrawable(
-                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                intArrayOf(0xff52617b.toInt(), 0xff25334b.toInt(), 0xff111827.toInt())
-            ).apply { cornerRadius = dp(14).toFloat() }
-            contentDescription = "Banner Castle Crashers"
+
+    private fun menuFooterButton(label: String, color: Int, action: () -> Unit): View =
+        TextView(this).apply {
+            text = label
+            textSize = 12f
+            gravity = android.view.Gravity.CENTER
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            setTextColor(-1)
+            background = rounded(color, 0xffffe0d0.toInt())
+            isClickable = true
+            setOnClickListener { action() }
+            layoutParams = LinearLayout.LayoutParams(0, dp(42), 1f).apply {
+                marginStart = dp(3); marginEnd = dp(3)
+            }
         }
-        hero.addView(artwork, LinearLayout.LayoutParams(-1, dp(188)))
-        hero.addView(gap(12))
-        hero.addView(text("A AVENTURA COMEÇA AQUI", 11f, 0xffffc96e.toInt()))
-        hero.addView(gap(5))
-        hero.addView(text("CASTLE\nCRASHERS", 34f, 0xfffff1d6.toInt()))
-        hero.addView(gap(7))
-        hero.addView(text("Seu jogo. Seu castelo. Sua batalha.", 13f, 0xffc1c9d8.toInt()))
-        hero.addView(gap(14))
-        val heroHint = text("Importe sua pasta original do jogo e jogue pelo runtime Windows integrado.", 12f, 0xffd6dbea.toInt())
-        heroHint.setLineSpacing(dp(3).toFloat(), 1f)
-        hero.addView(heroHint)
-        page.addView(hero)
-        page.addView(gap(16))
-
-        page.addView(button("⚔   JOGAR", "Iniciar Castle Crashers no runtime integrado", primary = true) { startGame() })
-        page.addView(button("＋   IMPORTAR JOGO", "Selecionar uma pasta extraída ou um arquivo ZIP do jogo") { chooseFolder() })
-        page.addView(button("▣   VERIFICAR ARQUIVOS", "Conferir se a cópia do jogo está completa") { inspectGame() })
-        page.addView(button("⌕   DIAGNÓSTICO", "Verificar arquitetura do executável e estado do runtime") { diagnoseGame() })
-
-        page.addView(gap(14))
-        page.addView(text("CONTROLES", 18f, 0xffffd28a.toInt()))
-        page.addView(gap(7))
-        val controllerCard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(dp(14), dp(14), dp(14), dp(14))
-            background = rounded(0xff171f30.toInt(), 0xff303c52.toInt())
-        }
-        devices = text("Detectando controles USB e Bluetooth…", 13f, 0xffd4dbea.toInt())
-        controllerCard.addView(devices)
-        controllerCard.addView(gap(8))
-        controllerCard.addView(button("ATUALIZAR DISPOSITIVOS", "Redetectar controles conectados") { refreshControllers() })
-        page.addView(controllerCard)
-        page.addView(gap(8))
-        page.addView(button("CONFIGURAÇÕES", "Resolução, áudio, renderizador e controles virtuais") { settings() })
-        page.addView(button("CONTROLES DURANTE O JOGO", "Ver como funciona o perfil touch Xbox integrado") { touchInfo() })
-
-        page.addView(gap(14))
-        page.addView(text("MULTIPLAYER LOCAL", 18f, 0xffffd28a.toInt()))
-        page.addView(gap(5))
-        page.addView(text("Co-op no mesmo aparelho: até 4 controles XInput. LAN: descoberta de dispositivos na rede Wi-Fi, sem sincronização de partidas nesta versão.", 12f, 0xff9ca9bd.toInt()))
-        page.addView(gap(7))
-        page.addView(button("PROCURAR SALAS LAN", "Buscar anúncios locais na rede") { discoverRooms() })
-        page.addView(button("ANUNCIAR SALA DE TESTE", "Anunciar este aparelho para descoberta") { advertiseRoom() })
-
-        status = text("Runtime Wine/Box64 integrado. Importe o jogo para começar.", 12f, 0xffa8e6b0.toInt())
-        status.setPadding(dp(14), dp(12), dp(14), dp(12))
-        status.background = rounded(0xff14251f.toInt(), 0xff315b48.toInt())
-        page.addView(gap(12))
-        page.addView(status)
-        page.addView(gap(10))
-        page.addView(text("Na primeira execução, o app prepara o runtime Windows e cria o prefixo Wine. Reserve espaço livre. O APK não inclui os arquivos comerciais do jogo: importe uma cópia que você tenha direito de usar. LAN gameplay e Steam online ainda não estão implementados.", 11f, 0xff8e9bb0.toInt()))
-
-        scroll.addView(page)
-        setContentView(scroll)
-    }
 
     private fun rounded(fill: Int, stroke: Int) =
         android.graphics.drawable.GradientDrawable().apply {
@@ -335,24 +383,41 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
     }
 
     private fun startGame() {
-        val installed = prefs.getString("game_install_path", null)?.let { File(it) }
-        val exe = installed?.walkTopDown()?.firstOrNull { it.isFile && it.name.equals("castle.exe", true) }
-        if (installed == null || exe == null) {
-            status.text = "Importe a pasta completa do jogo antes de iniciar."
+        if (launchInProgress) return
+        val path = prefs.getString("game_install_path", null)
+        if (path.isNullOrBlank()) {
+            status.text = "Importe a pasta completa do jogo primeiro."
+            chooseFolder()
             return
         }
-        val pe = try { PeExecutableInspector.inspect(exe) } catch (e: Exception) {
-            status.text = "Executável inválido: ${e.message}"
-            return
-        }
-        if (pe.machine != 0x014C || pe.bits != 32) {
-            status.text = "O runtime está configurado para o Castle Crashers Windows x86/32-bit."
-            return
-        }
-        status.text = "Iniciando o runtime Windows integrado…"
-        WinlatorRuntimeBridge.launch(this, installed, exe) { message ->
-            runOnUiThread { status.text = message }
-        }
+        launchInProgress = true
+        status.text = "Verificando arquivos do jogo em segundo plano…"
+        Thread {
+            try {
+                val installed = File(path)
+                val exe = installed.walkTopDown().firstOrNull { it.isFile && it.name.equals("castle.exe", true) }
+                if (exe == null) throw IllegalStateException("Castle.exe não foi encontrado na pasta importada.")
+                val pe = PeExecutableInspector.inspect(exe)
+                if (pe.machine != 0x014C || pe.bits != 32) {
+                    throw IllegalStateException("O Castle.exe precisa ser Windows x86 de 32 bits.")
+                }
+                runOnUiThread {
+                    launchInProgress = false
+                    status.text = "Preparando Wine/Box64… mantenha o app aberto."
+                    WinlatorRuntimeBridge.launch(this, installed, exe) { message ->
+                        runOnUiThread { status.text = message }
+                    }
+                }
+            } catch (error: Exception) {
+                runOnUiThread {
+                    launchInProgress = false
+                    status.text = "Não foi possível iniciar: ${error.message ?: "erro desconhecido"}"
+                    AlertDialog.Builder(this).setTitle("Falha ao iniciar o jogo")
+                        .setMessage(error.message ?: "Verifique a pasta importada e tente novamente.")
+                        .setPositiveButton("OK", null).show()
+                }
+            }
+        }.start()
     }
 
     private fun refreshControllers() {
