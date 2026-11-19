@@ -1,6 +1,6 @@
 package com.castlecrashers.mobile
 
-import android.app.Activity
+import androidx.activity.ComponentActivity
 import android.os.Bundle
 import android.content.Intent
 import android.net.Uri
@@ -19,7 +19,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
 
-class MainActivity : Activity() {
+class MainActivity : ComponentActivity() {
     private lateinit var folderLabel: TextView
     private lateinit var inputLabel: TextView
     private var gameFolder: Uri? = null
