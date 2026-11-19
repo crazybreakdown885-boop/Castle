@@ -59,7 +59,8 @@ class MainActivity : Activity(), InputManager.InputDeviceListener {
         page.addView(banner)
         page.addView(gap(12))
         page.addView(button("SELECIONAR PASTA DO JOGO", "Importar a pasta por seletor Android") { chooseFolder() })
-        page.addView(button("VERIFICAR ARQUIVOS", "Procurar Castle.exe e arquivos do jogo") { inspectGame() })
+        page.addView(button("IMPORTAR JOGO PARA O APP", "Copiar EXE, DLLs e toda a pasta data para armazenamento interno") { gameFolder?.let { importGame(Uri.parse(it)) } ?: chooseFolder() })
+        page.addView(button("VERIFICAR ARQUIVOS", "Verificar a cópia completa do jogo") { inspectGame() })
         page.addView(button("VERIFICAR EXECUÇÃO DO EXE", "Checar Castle.exe e disponibilidade do runtime") { startGame() })
         page.addView(gap(16))
         page.addView(text("CONTROLES", 19f, 0xffffd58a.toInt()))
@@ -109,36 +110,71 @@ class MainActivity : Activity(), InputManager.InputDeviceListener {
             contentResolver.takePersistableUriPermission(uri, flags)
             gameFolder = uri.toString()
             prefs.edit().putString("game_folder", gameFolder).apply()
-            inspectGame()
+            importGame(uri)
         }
     }
 
+    private fun importGame(uri: Uri) {
+        status.text = "Preparando importação completa do jogo…"
+        Thread {
+            try {
+                val destination = File(filesDir, "games/castlecrashers")
+                val result = GameFolderInstaller.install(this, uri, destination) { message ->
+                    runOnUiThread { status.text = message }
+                }
+                prefs.edit().putString("game_install_path", result.root.absolutePath).apply()
+                runOnUiThread {
+                    status.text = "Jogo importado: " + result.filesCopied + " arquivos • Castle.exe localizado."
+                    AlertDialog.Builder(this).setTitle("Importação concluída")
+                        .setMessage("Castle.exe foi encontrado em:\n" + result.exe.absolutePath +
+                            "\n\nArquivos: " + result.filesCopied +
+                            "\nTamanho: " + (result.bytesCopied / (1024 * 1024)) + " MB")
+                        .setPositiveButton("OK", null).show()
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    status.text = "Falha ao importar: " + (e.message ?: "erro desconhecido")
+                    AlertDialog.Builder(this).setTitle("Falha na importação")
+                        .setMessage(e.message ?: "Não foi possível copiar a pasta.")
+                        .setPositiveButton("OK", null).show()
+                }
+            }
+        }.start()
+    }
+
     private fun inspectGame() {
+        val installed = prefs.getString("game_install_path", null)?.let { File(it) }
+        val installedExe = installed?.walkTopDown()?.firstOrNull { it.isFile && it.name.equals("castle.exe", true) }
+        if (installedExe != null) {
+            status.text = "Cópia completa validada • " + installedExe.absolutePath + " • runtime Windows ainda pendente."
+            return
+        }
         val uri = gameFolder ?: run { status.text = "Selecione a pasta do jogo primeiro."; return }
         val folder = DocumentFile.fromTreeUri(this, Uri.parse(uri))
-        val files = folder?.listFiles()?.filter { it.isFile && it.name?.endsWith(".exe", true) == true } ?: emptyList()
-        val castle = files.firstOrNull { it.name.equals("Castle.exe", true) }
+        val exe = folder?.listFiles()?.firstOrNull { it.isFile && it.name.equals("Castle.exe", true) }
         status.text = when {
             folder == null -> "Não foi possível acessar a pasta selecionada."
-            castle != null -> "Castle.exe encontrado. O runtime ainda precisa ser integrado."
-            files.isNotEmpty() -> "EXEs encontrados: " + files.joinToString { it.name ?: "arquivo" } + ". Não achei Castle.exe na raiz."
-            else -> "Nenhum EXE encontrado na raiz. Selecione a pasta correta do jogo."
+            exe != null -> "Castle.exe encontrado na origem. Importe a pasta completa para o armazenamento do app."
+            else -> "Castle.exe não encontrado na raiz. Selecione a pasta correta do jogo."
         }
     }
 
     private fun startGame() {
-        val uri = gameFolder ?: run { status.text = "Importe a pasta do jogo."; return }
-        val folder = DocumentFile.fromTreeUri(this, Uri.parse(uri))
-        val exe = folder?.listFiles()?.firstOrNull { it.isFile && it.name.equals("Castle.exe", true) }
-        if (exe == null) { status.text = "Castle.exe não encontrado."; return }
+        val installed = prefs.getString("game_install_path", null)?.let { File(it) }
+        val exe = installed?.walkTopDown()?.firstOrNull { it.isFile && it.name.equals("castle.exe", true) }
+        if (exe == null) {
+            status.text = "Importe a pasta completa do jogo antes de iniciar."
+            return
+        }
         val runtime = File(filesDir, "runtime")
         val box64 = File(runtime, "bin/box64")
         val wine = File(runtime, "wine/bin/wine")
         if (!box64.exists() || !wine.exists()) {
-            AlertDialog.Builder(this).setTitle("Runtime ausente")
-                .setMessage("A pasta do jogo foi encontrada, mas esta compilação ainda não inclui Wine + Box64 para Android. Não é possível executar o EXE sem esses componentes.")
+            AlertDialog.Builder(this).setTitle("Runtime Windows ainda não integrado")
+                .setMessage("A cópia completa do jogo está pronta em:\n" + installed!!.absolutePath +
+                    "\n\nO executável fornecido é Windows x86 de 32 bits. Esta compilação ainda não contém um runtime Wine/WoW64 + tradução ARM64 validado, então o jogo ainda não pode iniciar.")
                 .setPositiveButton("OK", null).show()
-            status.text = "Jogo localizado; execução aguardando runtime integrado."
+            status.text = "Arquivos do jogo prontos; aguardando runtime Windows x86 em ARM64."
         }
     }
 
