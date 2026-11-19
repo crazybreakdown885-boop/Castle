@@ -214,7 +214,7 @@ jobs:
           "$APKSIGNER" verify --verbose "$APK"
           mkdir -p release
           cp "$APK" release/Castle-Crashers-v1.0.1-arm64.apk
-          sha256sum release/Castle-Crashers-v1.0.0-arm64.apk | tee release/SHA256SUMS.txt
+          sha256sum release/Castle-Crashers-v1.0.1-arm64.apk | tee release/SHA256SUMS.txt
           ls -lh release/
 
       - name: Upload the single installable APK
@@ -227,7 +227,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish Castle Crashers V1
+      - name: Publish Castle Crashers V1.0.1
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
