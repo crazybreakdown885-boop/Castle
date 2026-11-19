@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <application
-        android:theme="@android:style/Theme.Material.NoActionBar"
+        android:theme="@style/AppThemeDark"
         android:label="Castle Mobile 0.3.0"
         android:icon="@drawable/ic_castle_mobile"
         android:allowBackup="false"
