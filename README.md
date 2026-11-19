@@ -1,15 +1,28 @@
-# Castle Brawlers Mobile
+# Castle Mobile 3.0 — launcher foundation
 
-An original 2D fantasy beat-em-up prototype built as a native Android application in Kotlin. It runs directly on Android and does not use Windows executables, Wine, Winlator, Box64, or streaming.
+Android-native Kotlin launcher foundation for legally owned Castle Crashers game files.
 
-## Playable preview
-- Landscape Android game rendered with Android Canvas.
-- Original knight, castle backdrop, enemies, sword attacks, hit effects, health, score, and waves.
-- Touch movement pad, attack and jump buttons.
-- Keyboard: WASD/arrows to move, X/J to attack, Z/Space to jump.
+## Implemented in this branch
+- Android Storage Access Framework folder selection with persisted access.
+- Scan the selected game folder for EXE files and detect `Castle.exe`.
+- Physical USB/Bluetooth gamepad discovery through Android InputManager, per-device IDs and basic key/axis event visibility.
+- Keyboard and mouse event detection.
+- Virtual Xbox-style touch controller test surface.
+- Settings UI for game resolution profile, volume profile, touch visibility and automatic controller assignment preference.
+- Android NSD service advertisement and discovery for local-network room discovery.
+
+## Not implemented / not claimed
+- **The original Windows EXE does not launch yet.** Wine for Android, Box64, graphics/audio userspace, native runtime packaging and the process-launch bridge are not included in this branch. The launch action deliberately reports this instead of pretending to run the game.
+- The touch pad is currently a visual/input test surface; it is not yet bridged to Wine XInput.
+- Controller auto-assignment is discovery/basic enumeration only; per-player remapping and XInput virtual-device injection are pending.
+- LAN currently discovers/announces a service only; it does not synchronize gameplay.
+- Steamworks multiplayer is not implemented.
+- Resolution/audio choices are stored as profiles and are not yet applied to a Windows runtime.
+
+## Runtime architecture needed for a real port
+A compatible Windows x86 runtime requires Wine plus Box64 (and the required ARM64 native libraries, graphics driver stack, audio stack, prefix bootstrap and Android process execution bridge). These must be built and licensed as part of the APK/runtime package. A folder picker and a shell command alone cannot run a Windows EXE on Android.
 
 ## Build
-Open this repository in Android Studio or run `gradle :app:assembleDebug` with Android SDK 35 and JDK 17.
+Run `gradle --no-daemon :app:assembleDebug` with JDK 17 and Android SDK 35.
 
-## Important
-This is an original fan-inspired prototype, not a port or copy of the commercial Castle Crashers game. It does not include proprietary game code or assets, Steam integration, or online multiplayer. Those features require separate lawful source/assets and engineering work.
+This is a development foundation, **not a playable Castle Crashers port**. Do not label this APK as able to run Castle.exe until that has been tested on a physical Android device.
