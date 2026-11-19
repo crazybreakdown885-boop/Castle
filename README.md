@@ -5,7 +5,7 @@ Port Android baseado no runtime Winlator integrado ao próprio APK. O aplicativo
 ## V1.0.0
 
 - Winlator integrado no mesmo APK (não exige instalar o Winlator separadamente).
-- Importação da pasta completa ou de um ZIP do jogo por seletor de documentos Android, com validação PE e proteção contra caminhos ZIP maliciosos.
+- Importação da pasta completa ou de um ZIP do jogo por seletor de documentos Android, com validação PE x86, pasta `data`, DLLs necessárias e proteção contra caminhos ZIP maliciosos.
 - Verificação PE para confirmar castle.exe Windows x86/32-bit.
 - Criação do contêiner Wine e cópia dos arquivos para o disco C:.
 - Configurações de resolução, áudio, DXVK/WineD3D e drivers gráficos, com perfil automático conservador em aparelhos com até 3 GB de RAM e seleção de preset Box64.
