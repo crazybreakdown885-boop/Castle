@@ -5,6 +5,10 @@ on:
     branches: [ "main", "castle-v1.0.0-final" ]
   workflow_dispatch:
 
+concurrency:
+  group: castle-v1-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -105,6 +109,7 @@ jobs:
           retention-days: 30
 
       - name: Publish Castle Crashers V1
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.0
