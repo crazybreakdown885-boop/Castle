@@ -1,74 +1,131 @@
-name: Build Castle Mobile 0.3.0 Android APK
+name: Castle Crashers V1 — Android APK
+
 on:
   push:
-    branches: [ "main", "v0.3.0" ]
+    branches: [ "castle-v1.0.0" ]
+    tags: [ "v1.0.0" ]
   workflow_dispatch:
+
 concurrency:
-  group: castle-mobile-${{ github.ref }}
+  group: castle-v1-\${{ github.ref }}
   cancel-in-progress: true
+
 permissions:
-  contents: read
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout source and Winlator submodules
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          fetch-depth: 0
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
-      - name: Adapt Winlator runtime to Castle host and touchscreen profile
+
+      - name: Adapt embedded Winlator host and touch profile
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          path = Path("vendor/winlator-app/app/src/main/java/com/winlator/xenvironment/RootFSInstaller.java")
-          source = path.read_text()
+          installer = Path("vendor/winlator-app/app/src/main/java/com/winlator/xenvironment/RootFSInstaller.java")
+          source = installer.read_text()
           source = source.replace("public static void install(final MainActivity activity)", "public static void install(final AppCompatActivity activity)")
           source = source.replace("public static void installIfNeeded(final MainActivity activity)", "public static void installIfNeeded(final AppCompatActivity activity)")
           if "public static void install(final AppCompatActivity activity)" not in source:
-              raise SystemExit("Winlator RootFSInstaller patch did not apply")
-          path.write_text(source)
+              raise SystemExit("RootFSInstaller host adaptation failed")
+          installer.write_text(source)
           display = Path("vendor/winlator-app/app/src/main/java/com/winlator/XServerDisplayActivity.java")
           source = display.read_text()
-          old = "        if (shortcut != null) {\n            String controlsProfile = shortcut.getExtra(\"controlsProfile\");\n            if (!controlsProfile.isEmpty()) {\n                ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));\n                if (profile != null) showInputControls(profile);\n            }\n        }\n"
-          new = "        if (shortcut != null) {\n            String controlsProfile = shortcut.getExtra(\"controlsProfile\");\n            if (!controlsProfile.isEmpty()) {\n                ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));\n                if (profile != null) showInputControls(profile);\n            }\n        }\n        else if (getIntent().getBooleanExtra(\"castle_touch_controls\", true)) {\n            ControlsProfile profile = inputControlsManager.getProfile(3);\n            if (profile != null) showInputControls(profile);\n        }\n"
+          old = """        if (shortcut != null) {
+                      String controlsProfile = shortcut.getExtra("controlsProfile");
+                      if (!controlsProfile.isEmpty()) {
+                          ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));
+                          if (profile != null) showInputControls(profile);
+                      }
+                  }
+          """
+          new = old + """        else if (getIntent().getBooleanExtra("castle_touch_controls", true)) {
+                      ControlsProfile profile = inputControlsManager.getProfile(3);
+                      if (profile != null) showInputControls(profile);
+                  }
+          """
           if old not in source:
-              raise SystemExit("Winlator touchscreen profile patch did not apply")
-          display.write_text(source.replace(old, new))
+              raise SystemExit("Winlator touch profile adaptation failed")
+          display.write_text(source.replace(old, new, 1))
           main = Path("vendor/winlator-app/app/src/main/java/com/winlator/MainActivity.java")
           source = main.read_text()
           source = source.replace("if (!requestAppPermissions()) RootFSInstaller.installIfNeeded(this);", "RootFSInstaller.installIfNeeded(this);")
           main.write_text(source)
           PY
-      - name: Build debug APK
+
+      - name: Build integrated ARM64 APK
         run: gradle --no-daemon :app:assembleDebug
-      - name: Verify embedded Windows runtime payload
+
+      - name: Verify package, signature and embedded runtime
+        shell: bash
         run: |
-          APK=app/build/outputs/apk/debug/app-debug.apk
+          set -euo pipefail
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
           unzip -l "$APK" > apk-contents.txt
-          grep -q "assets/rootfs.tzst" apk-contents.txt
-          grep -q "assets/container_pattern.tzst" apk-contents.txt
-          grep -q "assets/box64/" apk-contents.txt
-          grep -q "assets/pulseaudio.tzst" apk-contents.txt
-          grep -q "assets/inputcontrols/profiles/controls-3.icp" apk-contents.txt
-          grep -q "lib/arm64-v8a/libzstd-jni-1.5.2-3.so" apk-contents.txt
-          grep -q "lib/arm64-v8a/libwinlator.so" apk-contents.txt
-          grep -q "lib/arm64-v8a/libvortekrenderer.so" apk-contents.txt
-          grep -q "lib/arm64-v8a/libgladiorenderer.so" apk-contents.txt
-          grep -q "lib/arm64-v8a/libvirglrenderer.so" apk-contents.txt
-          grep -q "lib/arm64-v8a/libmidihandler.so" apk-contents.txt
-      - name: Upload APK artifact
+          for required in \
+            "assets/rootfs.tzst" \
+            "assets/container_pattern.tzst" \
+            "assets/box64/" \
+            "assets/pulseaudio.tzst" \
+            "assets/inputcontrols/profiles/controls-3.icp" \
+            "lib/arm64-v8a/libwinlator.so" \
+            "lib/arm64-v8a/libvortekrenderer.so" \
+            "lib/arm64-v8a/libgladiorenderer.so" \
+            "lib/arm64-v8a/libvirglrenderer.so" \
+            "lib/arm64-v8a/libmidihandler.so"; do
+            grep -Fq "$required" apk-contents.txt || { echo "Missing APK component: $required"; exit 1; }
+          done
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n1)"
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify --verbose "$APK"
+          mkdir -p release
+          cp "$APK" "release/Castle-Crashers-v1.0.0-arm64.apk"
+          sha256sum "release/Castle-Crashers-v1.0.0-arm64.apk" | tee release/SHA256SUMS.txt
+          ls -lh release/
+
+      - name: Upload one APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CastleMobile-0.3.0-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: Castle-Crashers-v1.0.0-ARM64
+          path: |
+            release/Castle-Crashers-v1.0.0-arm64.apk
+            release/SHA256SUMS.txt
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
+
+      - name: Publish Castle Crashers V1
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: Castle Crashers V1
+          draft: false
+          prerelease: false
+          make_latest: true
+          overwrite_files: true
+          files: |
+            release/Castle-Crashers-v1.0.0-arm64.apk
+            release/SHA256SUMS.txt
+          fail_on_unmatched_files: true
+          body: |
+            Castle Crashers V1 — Android ARM64 APK.
+            Embedded Winlator/Wine/Box64 runtime and touch/controller integration.
+            The commercial game files are not bundled; import your own game folder.
+            LAN gameplay and Steamworks online are not implemented in this build.
