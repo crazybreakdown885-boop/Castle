@@ -410,6 +410,13 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             setSelection(prefs.getInt("renderer", 0))
         }
         panel.addView(renderer)
+        panel.addView(text("Perfil Box64", 14f))
+        val box64Presets = arrayOf("Automático (por aparelho)", "Performance", "Intermediate", "Stability")
+        val box64Preset = Spinner(this).apply {
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, box64Presets)
+            setSelection(prefs.getInt("box64_preset", 0))
+        }
+        panel.addView(box64Preset)
         panel.addView(text("Driver gráfico", 14f))
         val graphicsDrivers = arrayOf(
             "Automático (recomendado)",
@@ -440,6 +447,7 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             .setPositiveButton("Salvar") { _, _ ->
                 prefs.edit().putInt("resolution", resolution.selectedItemPosition).putInt("renderer", renderer.selectedItemPosition)
                     .putInt("graphics_driver", graphicsDriver.selectedItemPosition).putInt("volume", volume.progress)
+                    .putInt("box64_preset", box64Preset.selectedItemPosition)
                     .putBoolean("touch", touch.isChecked).putBoolean("performance_hud", performanceHud.isChecked).apply()
                 status.text = "Configurações salvas e aplicadas na próxima inicialização do jogo."
             }.setNegativeButton("Cancelar", null).show()
