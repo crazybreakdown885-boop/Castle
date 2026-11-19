@@ -31,7 +31,7 @@ jobs:
       - name: Include upstream license and notice files in the APK
         run: |
           mkdir -p app/src/main/assets/licenses
-          find vendor/winlator-app -type f \\( -iname 'LICENSE*' -o -iname 'COPYING*' -o -iname 'NOTICE*' \\) -not -path '*/.git/*' -exec cp --parents {} app/src/main/assets/licenses/ \\;
+          find vendor/winlator-app -type f \\( -iname 'LICENSE*' -o -iname 'COPYING*' -o -iname 'NOTICE*' \\) -not -path '*/.git' -not -path '*/.git/*' -exec cp --parents {} app/src/main/assets/licenses/ \\;
           cp THIRD_PARTY_NOTICES.md app/src/main/assets/licenses/CASTLE_THIRD_PARTY_NOTICES.md
 
       - name: Set up Android SDK
