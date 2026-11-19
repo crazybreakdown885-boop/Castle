@@ -64,7 +64,12 @@ object WinlatorRuntimeBridge {
         val check = object : Runnable {
             override fun run() {
                 if (activity.isFinishing || activity.isDestroyed) return
-                if (rootFS.isValid() && rootFS.version >= RootFSInstaller.LATEST_VERSION.toInt()) {
+                // The installer creates the version marker before writing its contents.
+                // getVersion() can briefly throw while that marker is empty; don't crash the launcher.
+                val rootReady = runCatching {
+                    rootFS.isValid() && rootFS.version >= RootFSInstaller.LATEST_VERSION.toInt()
+                }.getOrDefault(false)
+                if (rootReady) {
                     onStatus("Runtime base instalado. Preparando prefixo Wine…")
                     getOrCreateContainer(activity, gameFolder, gameExe, onStatus)
                 } else if (SystemClock.elapsedRealtime() - startedAt >= ROOTFS_TIMEOUT_MS) {
@@ -84,21 +89,24 @@ object WinlatorRuntimeBridge {
         gameExe: File,
         onStatus: (String) -> Unit
     ) {
-        val manager = ContainerManager(activity)
-        val existing = manager.containers.firstOrNull { it.name == CONTAINER_NAME }
-        if (existing != null) {
-            prepareAndLaunch(activity, manager, existing, gameFolder, gameExe, onStatus)
-            return
-        }
-
-        onStatus("Criando prefixo Wine para Castle Crashers…")
-        val data = JSONObject().put("name", CONTAINER_NAME)
-        manager.createContainerAsync(data) { container ->
-            if (container == null) {
-                onStatus("Não foi possível criar o prefixo Wine.")
-            } else {
-                prepareAndLaunch(activity, manager, container, gameFolder, gameExe, onStatus)
+        try {
+            val manager = ContainerManager(activity)
+            val existing = manager.containers.firstOrNull { it.name == CONTAINER_NAME }
+            if (existing != null) {
+                prepareAndLaunch(activity, manager, existing, gameFolder, gameExe, onStatus)
+                return
             }
+            onStatus("Criando prefixo Wine para Castle Crashers…")
+            val data = JSONObject().put("name", CONTAINER_NAME)
+            manager.createContainerAsync(data) { container ->
+                if (container == null) {
+                    onStatus("Não foi possível criar o prefixo Wine. Verifique o espaço livre e tente novamente.")
+                } else {
+                    prepareAndLaunch(activity, manager, container, gameFolder, gameExe, onStatus)
+                }
+            }
+        } catch (error: Exception) {
+            onStatus("Falha ao preparar o contêiner Wine: ${error.message ?: "erro desconhecido"}")
         }
     }
 
@@ -114,6 +122,13 @@ object WinlatorRuntimeBridge {
         Thread {
             try {
                 val driveC = File(container.rootDir, ".wine/drive_c")
+                if (!driveC.isDirectory && !driveC.mkdirs()) {
+                    throw IllegalStateException("Não foi possível preparar o disco C: do Wine.")
+                }
+                val requiredBytes = gameFolder.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+                if (driveC.usableSpace < requiredBytes + 256L * 1024L * 1024L) {
+                    throw IllegalStateException("Espaço insuficiente para copiar o jogo e preparar o Wine. Libere armazenamento e tente novamente.")
+                }
                 val targetDir = File(driveC, "CastleCrashers")
                 val relativeExe = gameExe.relativeTo(gameFolder)
                 val targetExe = File(targetDir, relativeExe.path)
@@ -190,7 +205,7 @@ object WinlatorRuntimeBridge {
             2 -> Box64Preset.INTERMEDIATE
             3 -> Box64Preset.STABILITY
             else -> if (memoryForProfile(activity) <= 3L * 1024L * 1024L * 1024L)
-                Box64Preset.INTERMEDIATE else Box64Preset.PERFORMANCE
+                Box64Preset.STABILITY else Box64Preset.PERFORMANCE
         }
         container.setBox64Preset(box64Preset)
         container.setHUDMode(
