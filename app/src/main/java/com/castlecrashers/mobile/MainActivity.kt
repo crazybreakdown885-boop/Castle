@@ -374,15 +374,20 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         panel.addView(text("Volume do jogo", 14f))
         val volume = SeekBar(this).apply { max = 100; progress = prefs.getInt("volume", 80) }
         panel.addView(volume)
-        val touch = CheckBox(this).apply { text = "Mostrar controle touch"; isChecked = prefs.getBoolean("touch", true) }
+        val touch = CheckBox(this).apply { text = "Mostrar controle touch Xbox"; isChecked = prefs.getBoolean("touch", true) }
         panel.addView(touch)
+        val performanceHud = CheckBox(this).apply {
+            text = "Exibir FPS, CPU e RAM durante o jogo"
+            isChecked = prefs.getBoolean("performance_hud", true)
+        }
+        panel.addView(performanceHud)
         panel.addView(text("USB/Bluetooth: detecção e atribuição automática de até 4 controles pelo runtime.", 12f, 0xffaab2c5.toInt()))
         val scroll = ScrollView(this).apply { addView(panel) }
         AlertDialog.Builder(this).setTitle("Configurações").setView(scroll)
             .setPositiveButton("Salvar") { _, _ ->
                 prefs.edit().putInt("resolution", resolution.selectedItemPosition).putInt("renderer", renderer.selectedItemPosition)
                     .putInt("graphics_driver", graphicsDriver.selectedItemPosition).putInt("volume", volume.progress)
-                    .putBoolean("touch", touch.isChecked).apply()
+                    .putBoolean("touch", touch.isChecked).putBoolean("performance_hud", performanceHud.isChecked).apply()
                 status.text = "Configurações salvas e aplicadas na próxima inicialização do jogo."
             }.setNegativeButton("Cancelar", null).show()
     }
