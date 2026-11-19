@@ -167,7 +167,7 @@ object WinlatorRuntimeBridge {
             2 -> GraphicsDrivers.VORTEK + "," + GraphicsDrivers.GLADIO
             3 -> GraphicsDrivers.TURNIP + "," + GraphicsDrivers.ZINK
             4 -> GraphicsDrivers.VORTEK + "," + GraphicsDrivers.VIRGL
-            5 -> GraphicsDrivers.VORTEK + "," + GraphicsDrivers.GLADIO
+            5 -> GraphicsDrivers.VORTEK + "," + GraphicsDrivers.ZINK
             else -> GraphicsDrivers.getDefaultDriver(activity)
         }
         container.setGraphicsDriver(graphicsDriver)
