@@ -41,12 +41,14 @@ object GameFolderInstaller {
                                 while (true) {
                                     val count = input.read(buffer)
                                     if (count < 0) break
-                                    output.write(buffer, 0, count)
                                     bytes += count
+                                    require(bytes <= 1024L * 1024L * 1024L) { "A pasta do jogo excede o limite de segurança de 1 GB." }
+                                    output.write(buffer, 0, count)
                                 }
                             }
                         } ?: throw IllegalStateException("Não foi possível ler: $name")
                         files++
+                        require(files <= 20000) { "A pasta contém mais de 20.000 arquivos." }
                         if (files % 40 == 0) progress("Copiados $files arquivos • ${bytes / (1024 * 1024)} MB")
                     }
                 }
