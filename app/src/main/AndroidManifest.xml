@@ -15,8 +15,9 @@
 
     <application
         android:theme="@style/AppThemeDark"
-        android:label="Castle Mobile 0.3.0"
+        android:label="Castle Crashers Mobile"
         android:icon="@drawable/ic_castle_mobile"
+        android:roundIcon="@drawable/ic_castle_mobile"
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
         android:extractNativeLibs="true"
@@ -25,7 +26,7 @@
 
         <activity
             android:name="com.castlecrashers.mobile.MainActivity"
-            android:screenOrientation="landscape"
+            android:screenOrientation="portrait"
             android:configChanges="orientation|screenSize|keyboard|keyboardHidden"
             android:exported="true">
             <intent-filter>
