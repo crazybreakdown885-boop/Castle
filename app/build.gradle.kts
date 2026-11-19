@@ -21,5 +21,6 @@ android {
 dependencies {
     implementation("androidx.activity:activity:1.9.3")
     implementation("androidx.documentfile:documentfile:1.0.1")
+    implementation(project(":winlator-engine"))
     testImplementation("junit:junit:4.13.2")
 }
