@@ -43,3 +43,6 @@ Requisitos: JDK 17, Android SDK 35, NDK 24.0.8215888, CMake 3.22.1 e Git com sub
     gradle --no-daemon :app:assembleDebug
 
 A integração usa o código Winlator upstream fixado como submódulo. Consulte THIRD_PARTY_NOTICES.md para licenças e créditos.
+
+
+O build da branch principal é publicado somente após as verificações do APK ARM64 completo.
