@@ -143,11 +143,17 @@ class MainActivity : Activity(), InputManager.InputDeviceListener {
     }
 
     private fun refreshControllers() {
-        val pads = input.inputDeviceIds.mapNotNull { InputDevice.getDevice(it) }.filter {
-            it.sources and (InputDevice.SOURCE_GAMEPAD or InputDevice.SOURCE_JOYSTICK) != 0
+        val deviceIds: IntArray = InputDevice.getDeviceIds()
+        val allDevices: List<InputDevice> = deviceIds.map { deviceId: Int ->
+            InputDevice.getDevice(deviceId)
+        }.filterNotNull()
+        val pads: List<InputDevice> = allDevices.filter { device: InputDevice ->
+            (device.sources and (InputDevice.SOURCE_GAMEPAD or InputDevice.SOURCE_JOYSTICK)) != 0
         }
         devices.text = if (pads.isEmpty()) "Nenhum controle detectado. Conecte USB/Bluetooth."
-        else pads.mapIndexed { i, d -> "Jogador " + (i + 1) + ": " + d.name + " (ID " + d.id + ")" }.joinToString("\n")
+        else pads.mapIndexed { index: Int, device: InputDevice ->
+            "Jogador " + (index + 1) + ": " + device.name + " (ID " + device.id + ")"
+        }.joinToString("\n")
     }
     override fun onInputDeviceAdded(deviceId: Int) = refreshControllers()
     override fun onInputDeviceRemoved(deviceId: Int) = refreshControllers()
