@@ -58,11 +58,11 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             orientation = LinearLayout.HORIZONTAL
             gravity = android.view.Gravity.CENTER_VERTICAL
         }
-        val brand = text("⚔", 28f, 0xffffc45f.toInt())
+        val brand = text("♜", 28f, 0xffffc45f.toInt())
         top.addView(brand, LinearLayout.LayoutParams(dp(42), dp(44)))
         val brandText = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         brandText.addView(text("CASTLE CRASHERS", 16f, 0xffffe8bd.toInt()))
-        brandText.addView(text("MOBILE  •  VERSÃO 0.3.1", 10f, 0xff9ca9bd.toInt()))
+        brandText.addView(text("MOBILE  •  VERSÃO 0.3.2", 10f, 0xff9ca9bd.toInt()))
         top.addView(brandText)
         page.addView(top)
         page.addView(gap(18))
