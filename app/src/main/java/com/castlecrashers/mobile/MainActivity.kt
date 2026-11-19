@@ -51,7 +51,7 @@ class MainActivity : Activity(), InputManager.InputDeviceListener {
             setBackgroundColor(0xff111522.toInt())
         }
         page.addView(text("CASTLE", 14f, 0xffe5b96f.toInt()))
-        page.addView(text("MOBILE 3.0", 32f, 0xffffe7b5.toInt()))
+        page.addView(text("MOBILE 0.3.0", 32f, 0xffffe7b5.toInt()))
         page.addView(text("Launcher Android • executável original • múltiplos controles", 13f, 0xffaab2c5.toInt()))
         page.addView(gap(16))
         val banner = text("⚔  CASTLE CRASHERS • WINDOWS GAME\nImporte a pasta do jogo para verificar o executável.", 16f, 0xffffe8c0.toInt())
@@ -60,7 +60,7 @@ class MainActivity : Activity(), InputManager.InputDeviceListener {
         page.addView(gap(12))
         page.addView(button("SELECIONAR PASTA DO JOGO", "Importar a pasta por seletor Android") { chooseFolder() })
         page.addView(button("VERIFICAR ARQUIVOS", "Procurar Castle.exe e arquivos do jogo") { inspectGame() })
-        page.addView(button("INICIAR JOGO ORIGINAL", "Executar Castle.exe pelo runtime integrado") { startGame() })
+        page.addView(button("VERIFICAR EXECUÇÃO DO EXE", "Checar Castle.exe e disponibilidade do runtime") { startGame() })
         page.addView(gap(16))
         page.addView(text("CONTROLES", 19f, 0xffffd58a.toInt()))
         devices = text("Detectando controles USB e Bluetooth…")
@@ -73,10 +73,10 @@ class MainActivity : Activity(), InputManager.InputDeviceListener {
         page.addView(text("Descoberta de salas na mesma rede Wi-Fi.", 13f, 0xffaab2c5.toInt()))
         page.addView(button("PROCURAR SALAS", "Encontrar amigos na rede local") { discoverRooms() })
         page.addView(button("ANUNCIAR MINHA SALA", "Disponibilizar serviço local") { advertiseRoom() })
-        status = text("Estado: runtime Windows ainda não incorporado.", 13f, 0xffffbb78.toInt())
+        status = text("0.3.0 • Runtime Windows ainda não incorporado.", 13f, 0xffffbb78.toInt())
         page.addView(gap(12)); page.addView(status)
         page.addView(gap(8))
-        page.addView(text("IMPORTANTE: esta versão 3.0 é uma base de launcher/input. Ainda não executa o EXE: faltam os binários Wine/Box64 ARM64 e a ponte XInput testada. Steam multiplayer também não está implementado.", 12f, 0xffaab2c5.toInt()))
+        page.addView(text("IMPORTANTE: esta versão 0.3.0 é uma base de launcher/input. Ainda não executa o EXE: faltam os binários Wine/Box64 ARM64 e a ponte XInput testada. Steam multiplayer também não está implementado.", 12f, 0xffaab2c5.toInt()))
         scroll.addView(page); setContentView(scroll)
     }
 
