@@ -344,14 +344,14 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
     private fun settings() {
         val panel = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(8)) }
         panel.addView(text("Resolução do perfil do jogo", 14f))
-        val values = arrayOf("Automática", "1280 × 720", "960 × 540", "854 × 480", "640 × 360")
+        val values = arrayOf("Automática (854 × 480)", "1280 × 720", "960 × 540", "854 × 480", "640 × 360")
         val resolution = Spinner(this).apply {
             adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, values)
             setSelection(prefs.getInt("resolution", 0))
         }
         panel.addView(resolution)
         panel.addView(text("Renderizador Direct3D 9", 14f))
-        val renderers = arrayOf("DXVK (Vulkan • desempenho)", "WineD3D (OpenGL • compatibilidade)")
+        val renderers = arrayOf("Automático (ajustado ao aparelho)", "DXVK (Vulkan • desempenho)", "WineD3D (OpenGL • compatibilidade)")
         val renderer = Spinner(this).apply {
             adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, renderers)
             setSelection(prefs.getInt("renderer", 0))
