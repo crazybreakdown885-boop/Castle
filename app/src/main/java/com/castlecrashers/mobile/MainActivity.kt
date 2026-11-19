@@ -1,5 +1,7 @@
 package com.castlecrashers.mobile
 
+import com.winlator.R
+
 import androidx.appcompat.app.AppCompatActivity
 import android.app.AlertDialog
 import android.widget.ImageView
