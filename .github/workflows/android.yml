@@ -70,6 +70,12 @@ jobs:
           main.write_text(source)
           PY
 
+      - name: Restore stable Android debug signing identity
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: castle-android-debug-signing-v1
+
       - name: Build integrated Android APK
         run: gradle --no-daemon :app:assembleDebug
 
