@@ -1,10 +1,8 @@
 package com.castlecrashers.mobile
 
-import com.winlator.R
 
 import androidx.appcompat.app.AppCompatActivity
 import android.app.AlertDialog
-import android.widget.ImageView
 import android.content.Intent
 import android.hardware.input.InputManager
 import android.net.Uri
@@ -51,180 +49,85 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
     private fun home() {
         requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         window.decorView.systemUiVisibility = (
-            View.SYSTEM_UI_FLAG_FULLSCREEN or
-            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         )
-
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setBackgroundColor(0xffff884d.toInt())
-            setPadding(dp(12), dp(10), dp(12), dp(10))
-        }
-
+        val page = FrameLayout(this).apply { setBackgroundColor(0xff17233a.toInt()) }
+        page.addView(CastleMenuArtView(this), FrameLayout.LayoutParams(-1, -1))
+        val panelWidth = (resources.displayMetrics.widthPixels * 0.43f).toInt().coerceAtLeast(dp(300))
         val menu = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(dp(8), dp(4), dp(10), dp(4))
+            setPadding(dp(22), dp(18), dp(22), dp(22))
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(0xf0181720.toInt(), 0xe8242028.toInt(), 0xd91b1b26.toInt())
+            ).apply { cornerRadius = dp(5).toFloat(); setStroke(dp(2), 0xffc39a58.toInt()) }
         }
-        root.addView(menu, LinearLayout.LayoutParams(0, -1, 0.43f))
-
-        val logo = text("CASTLE", 30f, 0xff171321.toInt()).apply {
-            typeface = android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD_ITALIC)
-            letterSpacing = 0.22f
-            setShadowLayer(dp(2).toFloat(), dp(1).toFloat(), dp(2).toFloat(), 0xffffffff.toInt())
-        }
-        val logo2 = text("CRASHERS", 29f, 0xffe52c26.toInt()).apply {
-            typeface = android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD_ITALIC)
-            letterSpacing = 0.03f
-            setShadowLayer(dp(2).toFloat(), dp(1).toFloat(), dp(2).toFloat(), 0xff171321.toInt())
-        }
-        menu.addView(logo)
-        menu.addView(logo2)
-        menu.addView(text("STEAM EDITION  •  ANDROID", 9f, 0xfffff2dc.toInt()))
-        menu.addView(gap(10))
-
-        menu.addView(menuButton("LOCAL GAME", 0xffffa000.toInt()) { startGame() })
-        menu.addView(menuButton("ONLINE MULTIPLAYER", 0xff397ce0.toInt()) {
+        page.addView(menu, FrameLayout.LayoutParams(panelWidth, -1, android.view.Gravity.START))
+        menu.addView(text("CASTLE", 34f, 0xffffe6a6.toInt()).apply {
+            typeface = android.graphics.Typeface.create("serif", android.graphics.Typeface.BOLD_ITALIC)
+            letterSpacing = 0.04f
+            setShadowLayer(dp(3).toFloat(), dp(2).toFloat(), dp(3).toFloat(), 0xff120e16.toInt())
+        })
+        menu.addView(text("CRASHERS", 31f, 0xffd94a36.toInt()).apply {
+            typeface = android.graphics.Typeface.create("serif", android.graphics.Typeface.BOLD_ITALIC)
+            setShadowLayer(dp(3).toFloat(), dp(2).toFloat(), dp(3).toFloat(), 0xff09090f.toInt())
+        })
+        menu.addView(text("THE KINGDOM NEEDS YOU", 10f, 0xffd8c6a0.toInt()).apply { letterSpacing = 0.16f })
+        menu.addView(gap(18))
+        menu.addView(menuButton("LOCAL GAME", 0xffb98b4b.toInt()) { startGame() })
+        menu.addView(menuButton("ONLINE MULTIPLAYER", 0xff8c4540.toInt()) {
             AlertDialog.Builder(this).setTitle("Online Multiplayer")
-                .setMessage("O modo online/Steamworks ainda não está integrado. Você pode jogar localmente com controles conectados ao Winlator.")
+                .setMessage("Steamworks e partidas online ainda não estão integrados nesta versão. A descoberta LAN continua experimental.")
                 .setPositiveButton("OK", null).show()
         })
-        menu.addView(menuButton("HELP  &  OPTIONS", 0xff38b85a.toInt()) { settings() })
-        menu.addView(menuButton("DOWNLOAD CONTENT", 0xff974bd5.toInt()) { chooseFolder() })
-
-        val shortcuts = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = android.view.Gravity.CENTER
-        }
-        shortcuts.addView(menuSmallButton("🏆") { diagnoseGame() }, LinearLayout.LayoutParams(0, dp(48), 1f))
-        shortcuts.addView(menuSmallButton("♟") { touchInfo() }, LinearLayout.LayoutParams(0, dp(48), 1f))
-        shortcuts.addView(menuSmallButton("▥") { settings() }, LinearLayout.LayoutParams(0, dp(48), 1f))
-        menu.addView(shortcuts)
-        menu.addView(gap(8))
-
-        val footer = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        footer.addView(menuFooterButton("QUIT", 0xff656565.toInt()) { finish() }, LinearLayout.LayoutParams(0, dp(44), 1f))
-        footer.addView(menuFooterButton("MERCH", 0xffe85a9a.toInt()) {
-            AlertDialog.Builder(this).setTitle("Castle Crashers")
-                .setMessage("A loja e o conteúdo comercial do jogo abrem pela página oficial do jogo.")
-                .setPositiveButton("OK", null).show()
-        }, LinearLayout.LayoutParams(0, dp(44), 1f))
+        menu.addView(menuButton("HELP  &  OPTIONS", 0xff596c70.toInt()) { settings() })
+        menu.addView(menuButton("DOWNLOAD CONTENT", 0xff75604b.toInt()) { chooseFolder() })
+        menu.addView(gap(10))
+        val footer = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER }
+        footer.addView(menuFooterButton("CONTROLS", 0xff343642.toInt()) { touchInfo() }, LinearLayout.LayoutParams(0, dp(38), 1f))
+        footer.addView(menuFooterButton("QUIT", 0xff343642.toInt()) { finish() }, LinearLayout.LayoutParams(0, dp(38), 1f))
         menu.addView(footer)
-
-        val artPanel = FrameLayout(this).apply {
-            setPadding(dp(4), dp(4), dp(4), dp(4))
-            background = rounded(0xffffb45e.toInt(), 0xffffe6ad.toInt())
+        devices = text("CONTROLES: procurando dispositivos…", 9f, 0xffe6d7bd.toInt()).apply {
+            gravity = android.view.Gravity.CENTER_VERTICAL; setPadding(0, dp(12), 0, 0); maxLines = 2
         }
-        val art = ImageView(this).apply {
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            contentDescription = "Arte oficial de Castle Crashers para PC"
-            setImageResource(R.drawable.castle_header)
-            background = rounded(0xffd96b42.toInt(), 0xffffd28a.toInt())
+        status = text("Selecione LOCAL GAME para iniciar.", 10f, 0xffffd98b.toInt()).apply {
+            gravity = android.view.Gravity.CENTER_VERTICAL; setPadding(0, dp(4), 0, 0); maxLines = 2
         }
-        artPanel.addView(art, FrameLayout.LayoutParams(-1, -1))
-        root.addView(artPanel, LinearLayout.LayoutParams(0, -1, 0.57f))
-
-        devices = text("CONTROLES: procurando dispositivos…", 9f, 0xff27202a.toInt())
-        devices.setPadding(dp(8), dp(3), dp(8), dp(3))
-        devices.gravity = android.view.Gravity.CENTER
-        status = text("Selecione LOCAL GAME para iniciar.", 10f, 0xff27202a.toInt())
-        status.gravity = android.view.Gravity.CENTER
-        val page = FrameLayout(this)
-        page.addView(root, FrameLayout.LayoutParams(-1, -1))
-        val info = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundColor(0x99fff0d8.toInt())
-            addView(status)
-            addView(devices)
-        }
-        page.addView(info, FrameLayout.LayoutParams(-1, dp(34), android.view.Gravity.BOTTOM))
+        menu.addView(status)
+        menu.addView(devices)
         setContentView(page)
     }
 
-    private fun menuButton(label: String, color: Int, action: () -> Unit): View {
+    private fun menuButton(label: String, accent: Int, action: () -> Unit): View {
         val button = TextView(this).apply {
-            text = label
-            textSize = 15f
-            gravity = android.view.Gravity.CENTER
-            typeface = android.graphics.Typeface.create("sans-serif-condensed", android.graphics.Typeface.BOLD)
-            setTextColor(0xff26202a.toInt())
-            setPadding(dp(8), dp(7), dp(8), dp(7))
+            text = label; textSize = 14f; gravity = android.view.Gravity.CENTER_VERTICAL
+            typeface = android.graphics.Typeface.create("serif", android.graphics.Typeface.BOLD)
+            setTextColor(0xffffefd0.toInt()); setPadding(dp(17), 0, dp(12), 0)
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(0xfffff0c9.toInt(), color, color)
-            ).apply { cornerRadius = dp(11).toFloat(); setStroke(dp(3), 0xffffe8c2.toInt()) }
-            isClickable = true
-            isFocusable = true
-            elevation = dp(3).toFloat()
-            setOnClickListener { action() }
+                intArrayOf(0xff4b4140.toInt(), 0xff28242b.toInt(), 0xff191820.toInt())
+            ).apply { cornerRadius = dp(3).toFloat(); setStroke(dp(1), accent) }
+            isClickable = true; isFocusable = true; setOnClickListener { action() }
         }
-        button.layoutParams = LinearLayout.LayoutParams(-1, dp(43)).apply { bottomMargin = dp(5) }
+        button.layoutParams = LinearLayout.LayoutParams(-1, dp(46)).apply { bottomMargin = dp(8) }
         return button
     }
 
-    private fun menuSmallButton(label: String, action: () -> Unit): View =
-        TextView(this).apply {
-            text = label
-            textSize = 22f
-            gravity = android.view.Gravity.CENTER
-            setTextColor(-1)
-            background = rounded(0xffd84b4b.toInt(), 0xffffd8c0.toInt())
-            isClickable = true
-            setOnClickListener { action() }
-            layoutParams = LinearLayout.LayoutParams(0, dp(46), 1f).apply {
-                marginStart = dp(3); marginEnd = dp(3)
-            }
-        }
-
     private fun menuFooterButton(label: String, color: Int, action: () -> Unit): View =
         TextView(this).apply {
-            text = label
-            textSize = 12f
-            gravity = android.view.Gravity.CENTER
-            typeface = android.graphics.Typeface.DEFAULT_BOLD
-            setTextColor(-1)
-            background = rounded(color, 0xffffe0d0.toInt())
-            isClickable = true
-            setOnClickListener { action() }
-            layoutParams = LinearLayout.LayoutParams(0, dp(42), 1f).apply {
-                marginStart = dp(3); marginEnd = dp(3)
+            text = label; textSize = 10f; gravity = android.view.Gravity.CENTER
+            typeface = android.graphics.Typeface.create("serif", android.graphics.Typeface.BOLD)
+            setTextColor(0xffe6d4b4.toInt())
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(color); cornerRadius = dp(3).toFloat(); setStroke(dp(1), 0xff8c704c.toInt())
             }
+            isClickable = true; isFocusable = true; setOnClickListener { action() }
+            layoutParams = LinearLayout.LayoutParams(0, dp(38), 1f).apply { marginStart = dp(4); marginEnd = dp(4) }
         }
 
-    private fun rounded(fill: Int, stroke: Int) =
-        android.graphics.drawable.GradientDrawable().apply {
-            shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-            cornerRadius = dp(16).toFloat()
-            setColor(fill)
-            setStroke(dp(1), stroke)
-        }
-
-    private fun gap(n: Int) = View(this).apply {
-        layoutParams = LinearLayout.LayoutParams(1, dp(n))
-    }
-
-    private fun button(title: String, sub: String, primary: Boolean = false, action: () -> Unit): View {
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(dp(16), dp(13), dp(16), dp(13))
-            background = if (primary) rounded(0xff8e343d.toInt(), 0xffffc46f.toInt())
-                else rounded(0xff192337.toInt(), 0xff35445e.toInt())
-            isClickable = true
-            isFocusable = true
-            elevation = dp(if (primary) 4 else 1).toFloat()
-            setOnClickListener { action() }
-        }
-        box.addView(text(title, if (primary) 17f else 14f,
-            if (primary) 0xfffff0d7.toInt() else 0xffffd995.toInt()))
-        box.addView(text(sub, 11f, 0xffaebbd0.toInt()))
-        box.layoutParams = LinearLayout.LayoutParams(-1, -2).apply {
-            bottomMargin = dp(8)
-        }
-        return box
-    }
+    private fun gap(n: Int) = View(this).apply { layoutParams = LinearLayout.LayoutParams(1, dp(n)) }
 
     private fun chooseFolder() {
         AlertDialog.Builder(this)
@@ -405,10 +308,13 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
                     throw IllegalStateException("O Castle.exe precisa ser Windows x86 de 32 bits.")
                 }
                 runOnUiThread {
-                    launchInProgress = false
                     status.text = "Preparando Wine/Box64… mantenha o app aberto."
                     WinlatorRuntimeBridge.launch(this, installed, exe) { message ->
-                        runOnUiThread { status.text = message }
+                        runOnUiThread {
+                            status.text = message
+                            if (message.startsWith("Falha") || message.startsWith("Tempo esgotado") ||
+                                message.startsWith("Não foi possível")) launchInProgress = false
+                        }
                     }
                 }
             } catch (error: Exception) {
@@ -421,6 +327,11 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
                 }
             }
         }.start()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        launchInProgress = false
     }
 
     private fun refreshControllers() {
