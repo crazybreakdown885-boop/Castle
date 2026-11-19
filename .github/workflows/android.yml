@@ -1,8 +1,8 @@
-name: Build Castle Mobile 0.3.2 Android APK and publish
+name: Castle Crashers V1 — Android APK and Release
 
 on:
   push:
-    branches: [ "main", "ui-install-fix-0.3.1" ]
+    branches: [ "main", "castle-v1.0.0-final" ]
   workflow_dispatch:
 
 permissions:
@@ -12,10 +12,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout v0.3.2 source with Winlator submodules
+      - name: Checkout source with Winlator submodules
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
           submodules: recursive
           fetch-depth: 0
 
@@ -67,17 +66,12 @@ jobs:
           main.write_text(source)
           PY
 
-      - name: Prepare Castle Crashers hero image
-        run: |
-          mkdir -p app/src/main/assets
-          base64 -d app/src/main/assets/castle_hero.webp.b64 > app/src/main/assets/castle_hero.webp
-          test -s app/src/main/assets/castle_hero.webp
-
-      - name: Build Android APK
+      - name: Build integrated Android APK
         run: gradle --no-daemon :app:assembleDebug
 
-      - name: Verify APK contains embedded Windows runtime
+      - name: Verify embedded runtime and APK signature
         run: |
+          set -euo pipefail
           APK=app/build/outputs/apk/debug/app-debug.apk
           test -s "$APK"
           unzip -l "$APK" > apk-contents.txt
@@ -92,27 +86,38 @@ jobs:
           grep -q "lib/arm64-v8a/libgladiorenderer.so" apk-contents.txt
           grep -q "lib/arm64-v8a/libvirglrenderer.so" apk-contents.txt
           grep -q "lib/arm64-v8a/libmidihandler.so" apk-contents.txt
-          cp "$APK" CastleMobile-0.3.2.apk
-          ls -lh CastleMobile-0.3.2.apk
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n1)"
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify --verbose "$APK"
+          mkdir -p release
+          cp "$APK" release/Castle-Crashers-v1.0.0-arm64.apk
+          sha256sum release/Castle-Crashers-v1.0.0-arm64.apk | tee release/SHA256SUMS.txt
+          ls -lh release/
 
-      - name: Upload APK artifact
+      - name: Upload the single installable APK
         uses: actions/upload-artifact@v4
         with:
-          name: CastleMobile-0.3.2
-          path: CastleMobile-0.3.2.apk
+          name: Castle-Crashers-v1.0.0-ARM64
+          path: |
+            release/Castle-Crashers-v1.0.0-arm64.apk
+            release/SHA256SUMS.txt
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
 
-      - name: Publish verified APK to v0.3.1 Release
+      - name: Publish Castle Crashers V1
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.3.2
-          name: Castle Brawlers Mobile v0.3.2
+          tag_name: v1.0.0
+          name: Castle Crashers V1
           prerelease: false
           make_latest: true
           overwrite_files: true
-          files: CastleMobile-0.3.2.apk
+          files: |
+            release/Castle-Crashers-v1.0.0-arm64.apk
+            release/SHA256SUMS.txt
           fail_on_unmatched_files: true
           body: |
-            APK Android v0.3.2 com runtime Windows/Winlator integrado.
-            O workflow verifica os arquivos essenciais do runtime antes da publicação.
+            Castle Crashers V1 — Android ARM64.
+            Includes the embedded Winlator/Wine/Box64 runtime.
+            The commercial game files are not included; import your own legally obtained Windows game folder.
+            LAN gameplay and Steamworks online are not implemented.
