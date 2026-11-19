@@ -257,7 +257,14 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             setSelection(prefs.getInt("resolution", 0))
         }
         panel.addView(resolution)
-        panel.addView(text("Volume (perfil)", 14f))
+        panel.addView(text("Renderizador Direct3D 9", 14f))
+        val renderers = arrayOf("DXVK (Vulkan • desempenho)", "WineD3D (OpenGL • compatibilidade)")
+        val renderer = Spinner(this).apply {
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, renderers)
+            setSelection(prefs.getInt("renderer", 0))
+        }
+        panel.addView(renderer)
+        panel.addView(text("Volume do jogo", 14f))
         val volume = SeekBar(this).apply { max = 100; progress = prefs.getInt("volume", 80) }
         panel.addView(volume)
         val touch = CheckBox(this).apply { text = "Mostrar controle touch"; isChecked = prefs.getBoolean("touch", true) }
@@ -266,8 +273,9 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         panel.addView(auto)
         AlertDialog.Builder(this).setTitle("Configurações").setView(panel)
             .setPositiveButton("Salvar") { _, _ ->
-                prefs.edit().putInt("resolution", resolution.selectedItemPosition).putInt("volume", volume.progress)
-                    .putBoolean("touch", touch.isChecked).putBoolean("auto_map", auto.isChecked).apply()
+                prefs.edit().putInt("resolution", resolution.selectedItemPosition).putInt("renderer", renderer.selectedItemPosition)
+                    .putInt("volume", volume.progress).putBoolean("touch", touch.isChecked)
+                    .putBoolean("auto_map", auto.isChecked).apply()
                 status.text = "Preferências salvas. Aplicação real depende do runtime."
             }.setNegativeButton("Cancelar", null).show()
     }
