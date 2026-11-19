@@ -77,5 +77,82 @@ object GameFolderInstaller {
             if (!destination.exists() && backup.exists()) backup.renameTo(destination)
             throw error
         }
+    }    
+    fun installZip(context: Context, archiveUri: Uri, destination: File, progress: (String) -> Unit): Result {
+        val parent = destination.parentFile ?: throw IllegalStateException("Destino de instalação inválido.")
+        if (!parent.exists() && !parent.mkdirs()) throw IllegalStateException("Não foi possível criar a pasta de instalação.")
+        val staging = File(parent, destination.name + ".importing")
+        val backup = File(parent, destination.name + ".previous")
+        staging.deleteRecursively()
+        backup.deleteRecursively()
+        if (!staging.mkdirs()) throw IllegalStateException("Não foi possível preparar a extração.")
+
+        var files = 0
+        var bytes = 0L
+        try {
+            val input = context.contentResolver.openInputStream(archiveUri)
+                ?: throw IllegalArgumentException("Não foi possível abrir o arquivo ZIP.")
+            java.util.zip.ZipInputStream(java.io.BufferedInputStream(input)).use { zip ->
+                var entry = zip.nextEntry
+                while (entry != null) {
+                    val normalized = entry.name.replace('\\\\', '/')
+                    val segments = normalized.split('/')
+                    require(!normalized.startsWith("/") && segments.none { it == ".." || it.isEmpty() && normalized.startsWith("/") }) {
+                        "O ZIP contém um caminho inválido."
+                    }
+                    val target = File(staging, normalized).canonicalFile
+                    val rootPath = staging.canonicalPath + File.separator
+                    require(target.path.startsWith(rootPath) || target == staging.canonicalFile) {
+                        "O ZIP tenta gravar fora da pasta de instalação."
+                    }
+                    if (entry.isDirectory) {
+                        if (!target.exists() && !target.mkdirs()) throw IllegalStateException("Falha ao criar pasta extraída.")
+                    } else {
+                        target.parentFile?.let {
+                            if (!it.exists() && !it.mkdirs()) throw IllegalStateException("Falha ao preparar pasta extraída.")
+                        }
+                        FileOutputStream(target).use { output ->
+                            val buffer = ByteArray(64 * 1024)
+                            while (true) {
+                                val count = zip.read(buffer)
+                                if (count < 0) break
+                                bytes += count
+                                require(bytes <= 4L * 1024L * 1024L * 1024L) { "O conteúdo descompactado excede o limite de segurança de 4 GB." }
+                                output.write(buffer, 0, count)
+                            }
+                        }
+                        files++
+                        if (files % 40 == 0) progress("Extraídos $files arquivos • ${bytes / (1024 * 1024)} MB")
+                    }
+                    zip.closeEntry()
+                    entry = zip.nextEntry
+                }
+            }
+
+            val exe = staging.walkTopDown().firstOrNull { it.isFile && it.name.equals("castle.exe", true) }
+                ?: throw IllegalStateException("Castle.exe não foi encontrado dentro do ZIP.")
+            val pe = PeExecutableInspector.inspect(exe)
+            require(pe.machine == 0x014C && pe.bits == 32) {
+                "O Castle.exe selecionado é ${pe.architecture}/${pe.bits}-bit; esta versão espera Windows x86/32-bit."
+            }
+
+            if (destination.exists() && !destination.renameTo(backup)) {
+                throw IllegalStateException("Não foi possível preservar a instalação anterior.")
+            }
+            if (!staging.renameTo(destination)) {
+                if (backup.exists()) backup.renameTo(destination)
+                throw IllegalStateException("Não foi possível finalizar a instalação extraída.")
+            }
+            backup.deleteRecursively()
+            val installedExe = destination.walkTopDown().firstOrNull { it.isFile && it.name.equals("castle.exe", true) }
+                ?: throw IllegalStateException("O executável desapareceu após a extração.")
+            progress("ZIP validado: $files arquivos • ${bytes / (1024 * 1024)} MB • PE x86/32-bit")
+            return Result(destination, installedExe, files, bytes)
+        } catch (error: Exception) {
+            staging.deleteRecursively()
+            if (!destination.exists() && backup.exists()) backup.renameTo(destination)
+            throw error
+        }
     }
+
 }
