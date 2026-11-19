@@ -7,7 +7,9 @@
         android:label="Castle Mobile 0.3.0"
         android:icon="@drawable/ic_castle_mobile"
         android:allowBackup="false"
-        android:usesCleartextTraffic="false">
+        android:usesCleartextTraffic="false"
+        android:extractNativeLibs="true"
+        tools:replace="android:icon,android:label">
         <activity
             android:name="com.winlator.MainActivity"
             tools:node="remove" />
