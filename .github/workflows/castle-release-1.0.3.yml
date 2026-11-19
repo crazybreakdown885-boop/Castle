@@ -1,0 +1,164 @@
+name: Castle Crashers 1.0.3 — Build and Release
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: castle-release-103
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source and embedded Winlator
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android toolchain
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;24.0.8215888" "cmake;3.22.1"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Add official Castle Crashers artwork
+        run: |
+          mkdir -p app/src/main/res/drawable-nodpi
+          curl -fL --retry 3 https://cdn.cloudflare.steamstatic.com/steam/apps/204360/header.jpg -o app/src/main/res/drawable-nodpi/castle_header.jpg || curl -fL --retry 3 https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/204360/header.jpg -o app/src/main/res/drawable-nodpi/castle_header.jpg
+          python3 -m pip install --user Pillow
+          python3 - <<'PY'
+          from PIL import Image
+          image = Image.open("app/src/main/res/drawable-nodpi/castle_header.jpg").convert("RGB")
+          w, h = image.size
+          side = min(w, h)
+          x, y = (w-side)//2, (h-side)//2
+          image.crop((x,y,x+side,y+side)).resize((512,512), Image.Resampling.LANCZOS).save("app/src/main/res/drawable-nodpi/castle_pc_icon.jpg", quality=92)
+          PY
+          test -s app/src/main/res/drawable-nodpi/castle_header.jpg
+          test -s app/src/main/res/drawable-nodpi/castle_pc_icon.jpg
+
+      - name: Include upstream notices
+        run: |
+          mkdir -p app/src/main/assets/licenses
+          find vendor/winlator-app -type f \( -iname 'LICENSE*' -o -iname 'COPYING*' -o -iname 'NOTICE*' \) -not -path '*/.git/*' -exec cp --parents {} app/src/main/assets/licenses/ \;
+          cp THIRD_PARTY_NOTICES.md app/src/main/assets/licenses/CASTLE_THIRD_PARTY_NOTICES.md
+
+      - name: Patch Winlator host integration
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          root = Path("vendor/winlator-app/app/src/main/java/com/winlator")
+          installer = root / "xenvironment/RootFSInstaller.java"
+          s = installer.read_text()
+          s = s.replace("public static void install(final MainActivity activity)", "public static void install(final AppCompatActivity activity)")
+          s = s.replace("public static void installIfNeeded(final MainActivity activity)", "public static void installIfNeeded(final AppCompatActivity activity)")
+          if "public static void install(final AppCompatActivity activity)" not in s:
+              raise SystemExit("RootFSInstaller host patch failed")
+          installer.write_text(s)
+
+          display = root / "XServerDisplayActivity.java"
+          s = display.read_text()
+          old = """        if (shortcut != null) {
+            String controlsProfile = shortcut.getExtra("controlsProfile");
+            if (!controlsProfile.isEmpty()) {
+                ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));
+                if (profile != null) showInputControls(profile);
+            }
+        }
+          """
+          new = old + """        else if (getIntent().getBooleanExtra("castle_touch_controls", true)) {
+            ControlsProfile profile = inputControlsManager.getProfile(3);
+            if (profile != null) showInputControls(profile);
+        }
+          """
+          if old in s:
+              s = s.replace(old, new, 1)
+          elif "castle_touch_controls" not in s:
+              raise SystemExit("Touch controls patch point not found")
+          display.write_text(s)
+
+          file_utils = root / "core/FileUtils.java"
+          s = file_utils.read_text()
+          if "com.winlator.FileProvider" not in s and "com.crazybreakdown.castlecrashers.mobile.v101.FileProvider" not in s:
+              raise SystemExit("FileProvider authority not found")
+          file_utils.write_text(s.replace("com.winlator.FileProvider", "com.crazybreakdown.castlecrashers.mobile.v101.FileProvider"))
+          PY
+
+      - name: Restore stable signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: castle-android-debug-signing-v1
+
+      - name: Ensure signing key exists
+        run: |
+          mkdir -p ~/.android
+          if [ ! -f ~/.android/debug.keystore ]; then
+            keytool -genkeypair -v -storetype JKS -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Castle Crashers,O=Castle,C=BR"
+          fi
+
+      - name: Build integrated Android APK
+        run: gradle --no-daemon :app:assembleRelease
+
+      - name: Verify APK and runtime
+        run: |
+          set -euo pipefail
+          APK=app/build/outputs/apk/release/app-release.apk
+          test -s "$APK"
+          test "$(stat -c%s "$APK")" -gt 100000000
+          unzip -l "$APK" > apk-files.txt
+          grep -q "assets/rootfs.tzst" apk-files.txt
+          grep -q "assets/container_pattern.tzst" apk-files.txt
+          grep -q "assets/box64/" apk-files.txt
+          AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -n1)"
+          "$AAPT" dump badging "$APK" | grep -q "package: name='com.crazybreakdown.castlecrashers.mobile.v101' versionCode='11' versionName='1.0.3'"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n1)"
+          "$APKSIGNER" verify --verbose "$APK"
+          mkdir -p release
+          cp "$APK" release/Castle-Crashers-v1.0.3-arm64.apk
+          sha256sum release/Castle-Crashers-v1.0.3-arm64.apk > release/SHA256SUMS.txt
+
+      - name: Upload installable APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Castle-Crashers-v1.0.3-ARM64
+          path: |
+            release/Castle-Crashers-v1.0.3-arm64.apk
+            release/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.3
+          name: Castle Crashers V1.0.3
+          make_latest: true
+          overwrite_files: true
+          files: |
+            release/Castle-Crashers-v1.0.3-arm64.apk
+            release/SHA256SUMS.txt
+          fail_on_unmatched_files: true
+          body: |
+            Castle Crashers Android 1.0.3.
+            Updated launcher with official game artwork and safer first-run Wine initialization.
+            Includes embedded Winlator/Wine/Box64. Import your own legally obtained Windows game files.
