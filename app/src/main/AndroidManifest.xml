@@ -5,6 +5,7 @@
     <application
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:label="Castle Mobile 3.0"
+        android:icon="@drawable/ic_castle_mobile"
         android:allowBackup="false"
         android:usesCleartextTraffic="false">
         <activity
