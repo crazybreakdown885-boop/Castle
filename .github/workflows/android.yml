@@ -231,8 +231,8 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0
-          name: Castle Crashers V1
+          tag_name: v1.0.1
+          name: Castle Crashers V1.0.1
           prerelease: false
           make_latest: true
           overwrite_files: true
@@ -241,7 +241,7 @@ jobs:
             release/SHA256SUMS.txt
           fail_on_unmatched_files: true
           body: |
-            Castle Crashers V1 — Android ARM64.
+            Castle Crashers V1.0.1 — Android ARM64.
             Includes the embedded Winlator/Wine/Box64 runtime.
             The commercial game files are not included; import your own legally obtained Windows game folder.
             LAN gameplay and Steamworks online are not implemented.
