@@ -75,10 +75,10 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         page.addView(text("Teste de descoberta na rede Wi-Fi. Ainda não transmite a partida.", 13f, 0xffaab2c5.toInt()))
         page.addView(button("TESTAR DESCOBERTA LAN", "Procurar anúncios locais; não inicia jogo remoto") { discoverRooms() })
         page.addView(button("ANUNCIAR SERVIÇO DE TESTE", "Anunciar apenas descoberta local") { advertiseRoom() })
-        status = text("0.3.0 • Runtime Windows ainda não incorporado.", 13f, 0xffffbb78.toInt())
+        status = text("0.3.0 • Runtime Wine/Box64 integrado no APK. Importe e inicie o jogo.", 13f, 0xffa8e6b0.toInt())
         page.addView(gap(12)); page.addView(status)
         page.addView(gap(8))
-        page.addView(text("IMPORTANTE: esta versão 0.3.0 é uma base de launcher/input. Ainda não executa o EXE: faltam os binários Wine/Box64 ARM64 e a ponte XInput testada. Steam multiplayer também não está implementado.", 12f, 0xffaab2c5.toInt()))
+        page.addView(text("PRIMEIRA EXECUÇÃO: o app extrai o runtime Windows e cria o prefixo Wine; reserve espaço livre. O jogo ainda precisa ser validado no aparelho. Co-op local usa até 4 controles; LAN gameplay e Steam online não estão implementados.", 12f, 0xffaab2c5.toInt()))
         scroll.addView(page); setContentView(scroll)
     }
 
@@ -150,17 +150,28 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         val installedExe = installed?.walkTopDown()?.firstOrNull { it.isFile && it.name.equals("castle.exe", true) }
         if (installedExe != null) {
             val pe = PeExecutableInspector.inspect(installedExe)
-            status.text = "Cópia validada • PE " + pe.architecture + "/" + pe.bits + "-bit • runtime Windows pendente."
+            status.text = "Cópia validada • PE " + pe.architecture + "/" + pe.bits + "-bit • runtime integrado pronto para iniciar."
             return
         }
         val uri = gameFolder ?: run { status.text = "Selecione a pasta do jogo primeiro."; return }
         val folder = DocumentFile.fromTreeUri(this, Uri.parse(uri))
-        val exe = folder?.listFiles()?.firstOrNull { it.isFile && it.name.equals("Castle.exe", true) }
+        val exe = folder?.let { findExeInTree(it) }
         status.text = when {
             folder == null -> "Não foi possível acessar a pasta selecionada."
             exe != null -> "Castle.exe encontrado na origem. Importe a pasta completa para o armazenamento do app."
-            else -> "Castle.exe não encontrado na raiz. Selecione a pasta correta do jogo."
+            else -> "Castle.exe não encontrado nesta pasta ou subpastas. Selecione a pasta correta do jogo."
         }
+    }
+
+    private fun findExeInTree(folder: DocumentFile): DocumentFile? {
+        for (child in folder.listFiles()) {
+            if (child.isFile && child.name.equals("castle.exe", true)) return child
+            if (child.isDirectory) {
+                val nested = findExeInTree(child)
+                if (nested != null) return nested
+            }
+        }
+        return null
     }
 
     private fun diagnoseGame() {
@@ -173,12 +184,15 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         try {
             val pe = PeExecutableInspector.inspect(exe)
             val abi = android.os.Build.SUPPORTED_ABIS.joinToString(", ")
-            val runtime = File(filesDir, "runtime")
+            val rootFS = com.winlator.xenvironment.RootFS.find(this)
+            val rootfsStatus = if (rootFS.isValid() && rootFS.version >= com.winlator.xenvironment.RootFSInstaller.LATEST_VERSION.toInt())
+                "runtime extraído e instalado"
+            else "runtime embutido no APK; será extraído no primeiro início"
             val report = "Executável: ${exe.name}\nFormato: PE\nArquitetura: ${pe.architecture} / ${pe.bits}-bit\n" +
                 "Máquina PE: 0x${pe.machine.toString(16)}\nAndroid ABI: $abi\n" +
-                "Runtime local: ${if (runtime.exists()) "pasta encontrada" else "não instalado"}\n\n" +
+                "Runtime: $rootfsStatus\n\n" +
                 if (pe.machine == 0x014C && pe.bits == 32)
-                    "Alvo confirmado: Windows x86 de 32 bits. Precisa de Wine WoW64 + Box64 e camada gráfica D3D9."
+                    "Alvo confirmado: Windows x86 de 32 bits. O APK inclui Wine WoW64, Box64 e renderizadores D3D9."
                 else "Este executável não corresponde ao Castle Crashers x86 esperado."
             AlertDialog.Builder(this).setTitle("Diagnóstico técnico").setMessage(report)
                 .setPositiveButton("OK", null).show()
