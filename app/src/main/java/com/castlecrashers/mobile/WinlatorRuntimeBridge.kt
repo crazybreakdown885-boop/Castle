@@ -24,7 +24,7 @@ import java.io.File
  */
 object WinlatorRuntimeBridge {
     private const val CONTAINER_NAME = "Castle Crashers"
-    private const val ROOTFS_TIMEOUT_MS = 10 * 60 * 1000L
+    private const val ROOTFS_TIMEOUT_MS = 15 * 60 * 1000L
     private val mainHandler = Handler(Looper.getMainLooper())
 
     fun launch(
@@ -69,14 +69,20 @@ object WinlatorRuntimeBridge {
                 val rootReady = runCatching {
                     rootFS.isValid() && rootFS.version >= RootFSInstaller.LATEST_VERSION.toInt()
                 }.getOrDefault(false)
+                val stateFile = File(activity.filesDir, ".castle_rootfs_install_state")
+                val installState = runCatching { stateFile.readText().trim() }.getOrDefault("")
+                val elapsed = SystemClock.elapsedRealtime() - startedAt
                 if (rootReady) {
                     onStatus("Runtime base instalado. Preparando prefixo Wine…")
                     getOrCreateContainer(activity, gameFolder, gameExe, onStatus)
-                } else if (SystemClock.elapsedRealtime() - startedAt >= ROOTFS_TIMEOUT_MS) {
-                    onStatus("Tempo esgotado ao preparar o runtime. Verifique o espaço livre e tente novamente.")
+                } else if (installState == "failed") {
+                    onStatus("Falha ao extrair o runtime Windows. Libere espaço no armazenamento e tente novamente.")
+                } else if (elapsed >= ROOTFS_TIMEOUT_MS) {
+                    onStatus("Tempo esgotado após ${elapsed / 60000} min instalando o runtime. A extração não terminou; reinicie o app e tente novamente.")
                 } else {
-                    onStatus("Instalando arquivos do runtime Windows…")
-                    mainHandler.postDelayed(this, 1000)
+                    val minutes = elapsed / 60000
+                    onStatus(if (minutes > 0) "Instalando runtime Windows… ${minutes} min" else "Instalando runtime Windows… aguarde a primeira extração.")
+                    mainHandler.postDelayed(this, 5000)
                 }
             }
         }
