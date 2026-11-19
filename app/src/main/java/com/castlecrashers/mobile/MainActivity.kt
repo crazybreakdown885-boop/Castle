@@ -101,7 +101,7 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         page.addView(gap(16))
 
         page.addView(button("⚔   JOGAR", "Iniciar Castle Crashers no runtime integrado", primary = true) { startGame() })
-        page.addView(button("＋   IMPORTAR JOGO", "Selecionar a pasta com Castle.exe, DLLs e arquivos do jogo") { chooseFolder() })
+        page.addView(button("＋   IMPORTAR JOGO", "Selecionar uma pasta extraída ou um arquivo ZIP do jogo") { chooseFolder() })
         page.addView(button("▣   VERIFICAR ARQUIVOS", "Conferir se a cópia do jogo está completa") { inspectGame() })
         page.addView(button("⌕   DIAGNÓSTICO", "Verificar arquitetura do executável e estado do runtime") { diagnoseGame() })
 
@@ -176,22 +176,74 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
     }
 
     private fun chooseFolder() {
+        AlertDialog.Builder(this)
+            .setTitle("Importar Castle Crashers")
+            .setItems(arrayOf("Selecionar pasta extraída", "Selecionar arquivo ZIP")) { _, which ->
+                if (which == 0) chooseGameFolder() else chooseGameZip()
+            }
+            .show()
+    }
+
+    private fun chooseGameFolder() {
         val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(
             Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
         startActivityForResult(i, 3001)
     }
 
+    private fun chooseGameZip() {
+        val i = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "application/zip"
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+        }
+        startActivityForResult(i, 3002)
+    }
+
     @Deprecated("SAF")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 3001 && resultCode == RESULT_OK) {
+        if ((requestCode == 3001 || requestCode == 3002) && resultCode == RESULT_OK) {
             val uri = data?.data ?: return
-            val flags = data.flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-            contentResolver.takePersistableUriPermission(uri, flags)
-            gameFolder = uri.toString()
-            prefs.edit().putString("game_folder", gameFolder).apply()
-            importGame(uri)
+            val flags = data.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION
+            runCatching { contentResolver.takePersistableUriPermission(uri, flags) }
+            if (requestCode == 3001) {
+                gameFolder = uri.toString()
+                prefs.edit().putString("game_folder", gameFolder).apply()
+                importGame(uri)
+            } else {
+                importGameZip(uri)
+            }
         }
+    }
+
+    private fun importGameZip(uri: Uri) {
+        status.text = "Extraindo e validando o ZIP do jogo…"
+        Thread {
+            try {
+                val destination = File(filesDir, "games/castlecrashers")
+                val result = GameFolderInstaller.installZip(this, uri, destination) { message ->
+                    runOnUiThread { status.text = message }
+                }
+                prefs.edit().putString("game_install_path", result.root.absolutePath).apply()
+                runOnUiThread {
+                    val pe = PeExecutableInspector.inspect(result.exe)
+                    status.text = "ZIP importado: ${result.filesCopied} arquivos • PE ${pe.architecture}/${pe.bits}-bit."
+                    AlertDialog.Builder(this).setTitle("Importação concluída")
+                        .setMessage("Castle.exe foi encontrado em:\\n" + result.exe.absolutePath +
+                            "\\n\\nArquitetura: " + pe.architecture + " / " + pe.bits + "-bit" +
+                            "\\nArquivos: " + result.filesCopied +
+                            "\\nTamanho: " + (result.bytesCopied / (1024 * 1024)) + " MB")
+                        .setPositiveButton("OK", null).show()
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    status.text = "Falha ao importar ZIP: " + (e.message ?: "erro desconhecido")
+                    AlertDialog.Builder(this).setTitle("Falha na importação do ZIP")
+                        .setMessage(e.message ?: "Não foi possível extrair o arquivo.")
+                        .setPositiveButton("OK", null).show()
+                }
+            }
+        }.start()
     }
 
     private fun importGame(uri: Uri) {
