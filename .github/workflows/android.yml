@@ -35,14 +35,14 @@ jobs:
       - name: Publish APK in GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.1.0-prototype
-          name: CastleCrashersMobile v0.1.0 (Protótipo)
+          tag_name: v0.2.0-native-preview
+          name: Castle Brawlers Mobile v0.2.0 (Prévia nativa)
           prerelease: true
           make_latest: false
           overwrite_files: true
           files: app/build/outputs/apk/debug/app-debug.apk
           body: |
-            Primeira compilação Android do CastleCrashersMobile.
+            Prévia jogável de um beat-em-up 2D original, desenhado e executado diretamente no Android.
 
-            **Estado:** launcher protótipo. Ainda não executa o jogo Windows, não integra Steam e não oferece multiplayer online.
+            **Estado:** protótipo de jogo 2D nativo Android com combate, inimigos, pontuação e controles touch. Não contém arquivos/código de Castle Crashers, não integra Steam e ainda não oferece multiplayer online.
             APK de depuração para testes.
