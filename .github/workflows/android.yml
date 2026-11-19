@@ -84,6 +84,7 @@ jobs:
           set -euo pipefail
           APK=app/build/outputs/apk/debug/app-debug.apk
           test -s "$APK"
+          test "$(stat -c%s "$APK")" -gt 100000000
           unzip -l "$APK" > apk-contents.txt
           grep -q "assets/rootfs.tzst" apk-contents.txt
           grep -q "assets/container_pattern.tzst" apk-contents.txt
