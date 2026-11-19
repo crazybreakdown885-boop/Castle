@@ -87,7 +87,7 @@ jobs:
           grep -q "lib/arm64-v8a/libvirglrenderer.so" apk-contents.txt
           grep -q "lib/arm64-v8a/libmidihandler.so" apk-contents.txt
           cp "$APK" CastleMobile-0.3.2.apk
-          ls -lh CastleMobile-0.3.1.apk
+          ls -lh CastleMobile-0.3.2.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
