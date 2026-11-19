@@ -137,7 +137,7 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             ).apply { cornerRadius = dp(2).toFloat(); setStroke(dp(2), accent) }
             isClickable = true; isFocusable = true; setOnClickListener { action() }
         }
-        button.layoutParams = LinearLayout.LayoutParams(-1, dp(46)).apply { bottomMargin = dp(8) }
+        button.layoutParams = LinearLayout.LayoutParams(-1, dp(40)).apply { bottomMargin = dp(5) }
         return button
     }
 
