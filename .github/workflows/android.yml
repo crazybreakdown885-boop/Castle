@@ -48,16 +48,16 @@ jobs:
           display = Path("vendor/winlator-app/app/src/main/java/com/winlator/XServerDisplayActivity.java")
           source = display.read_text()
           old = """        if (shortcut != null) {
-                      String controlsProfile = shortcut.getExtra("controlsProfile");
-                      if (!controlsProfile.isEmpty()) {
-                          ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));
-                          if (profile != null) showInputControls(profile);
+            String controlsProfile = shortcut.getExtra("controlsProfile");
+            if (!controlsProfile.isEmpty()) {
+                ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));
+                if (profile != null) showInputControls(profile);
                       }
                   }
           """
           new = old + """        else if (getIntent().getBooleanExtra("castle_touch_controls", true)) {
-                      ControlsProfile profile = inputControlsManager.getProfile(3);
-                      if (profile != null) showInputControls(profile);
+            ControlsProfile profile = inputControlsManager.getProfile(3);
+            if (profile != null) showInputControls(profile);
                   }
           """
           if old not in source:
