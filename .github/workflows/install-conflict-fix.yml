@@ -46,7 +46,16 @@ jobs:
         run: |
           mkdir -p app/src/main/res/drawable-nodpi
           curl -fL --retry 3 https://cdn.cloudflare.steamstatic.com/steam/apps/204360/header.jpg -o app/src/main/res/drawable-nodpi/castle_header.jpg || curl -fL --retry 3 https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/204360/header.jpg -o app/src/main/res/drawable-nodpi/castle_header.jpg
-          convert app/src/main/res/drawable-nodpi/castle_header.jpg -gravity center -crop 215x215+0+0 +repage -resize 512x512 app/src/main/res/drawable-nodpi/castle_pc_icon.jpg
+          python3 -m pip install --user Pillow
+          python3 - <<'PY'
+          from PIL import Image
+          source = Image.open("app/src/main/res/drawable-nodpi/castle_header.jpg").convert("RGB")
+          width, height = source.size
+          side = min(width, height)
+          left = (width - side) // 2
+          top = (height - side) // 2
+          source.crop((left, top, left + side, top + side)).resize((512, 512), Image.Resampling.LANCZOS).save("app/src/main/res/drawable-nodpi/castle_pc_icon.jpg", quality=92)
+          PY
           test -s app/src/main/res/drawable-nodpi/castle_pc_icon.jpg
           test -s app/src/main/res/drawable-nodpi/castle_header.jpg
 
