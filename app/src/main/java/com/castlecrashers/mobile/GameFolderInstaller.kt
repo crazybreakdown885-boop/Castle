@@ -98,7 +98,7 @@ object GameFolderInstaller {
             java.util.zip.ZipInputStream(java.io.BufferedInputStream(input)).use { zip ->
                 var entry = zip.nextEntry
                 while (entry != null) {
-                    val normalized = entry.name.replace('\\\\', '/')
+                    val normalized = entry.name.replace('\\', '/')
                     val segments = normalized.split('/')
                     require(!normalized.startsWith("/") && segments.none { it == ".." || it.isEmpty() && normalized.startsWith("/") }) {
                         "O ZIP contém um caminho inválido."
