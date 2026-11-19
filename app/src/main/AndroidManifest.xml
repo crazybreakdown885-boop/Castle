@@ -12,67 +12,21 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-
-    <application
-        android:theme="@style/AppThemeDark"
-        android:label="Castle Mobile 0.3.0"
-        android:icon="@drawable/ic_castle_mobile"
-        android:allowBackup="false"
-        android:usesCleartextTraffic="false"
-        android:extractNativeLibs="true"
-        android:appCategory="game"
-        android:isGame="true">
-
-        <activity
-            android:name="com.castlecrashers.mobile.MainActivity"
-            android:screenOrientation="landscape"
-            android:configChanges="orientation|screenSize|keyboard|keyboardHidden"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+    <application android:theme="@style/AppThemeDark" android:label="Castle Crashers V1"
+        android:icon="@drawable/ic_castle_mobile" android:allowBackup="false"
+        android:usesCleartextTraffic="false" android:extractNativeLibs="true"
+        android:appCategory="game" android:isGame="true">
+        <activity android:name="com.castlecrashers.mobile.MainActivity" android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden" android:exported="true">
+            <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-
-        <activity
-            android:name="com.winlator.MainActivity"
-            android:exported="false"
-            android:theme="@style/AppThemeDark"
-            android:screenOrientation="sensor" />
-        <activity
-            android:name="com.winlator.XServerDisplayActivity"
-            android:exported="false"
-            android:theme="@style/AppThemeFullscreenDark"
-            android:supportsPictureInPicture="true"
-            android:launchMode="singleTask"
-            android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation"
-            android:screenOrientation="sensorLandscape" />
-        <activity
-            android:name="com.winlator.ControlsEditorActivity"
-            android:exported="false"
-            android:theme="@style/AppThemeFullscreenDark"
-            android:screenOrientation="sensorLandscape" />
-        <activity
-            android:name="com.winlator.ExternalControllerBindingsActivity"
-            android:theme="@style/AppThemeDark"
-            android:exported="false"
-            android:screenOrientation="sensor" />
-
-        <service
-            android:name="com.winlator.services.ForegroundService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback"
-            android:stopWithTask="false" />
-
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="com.winlator.FileProvider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
+        <activity android:name="com.winlator.MainActivity" android:exported="false" android:theme="@style/AppThemeDark" android:screenOrientation="sensor" />
+        <activity android:name="com.winlator.XServerDisplayActivity" android:exported="false" android:theme="@style/AppThemeFullscreenDark" android:supportsPictureInPicture="true" android:launchMode="singleTask" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation" android:screenOrientation="sensorLandscape" />
+        <activity android:name="com.winlator.ControlsEditorActivity" android:exported="false" android:theme="@style/AppThemeFullscreenDark" android:screenOrientation="sensorLandscape" />
+        <activity android:name="com.winlator.ExternalControllerBindingsActivity" android:theme="@style/AppThemeDark" android:exported="false" android:screenOrientation="sensor" />
+        <service android:name="com.winlator.services.ForegroundService" android:enabled="true" android:exported="false" android:foregroundServiceType="mediaPlayback" android:stopWithTask="false" />
+        <provider android:name="androidx.core.content.FileProvider" android:authorities="com.winlator.FileProvider" android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
     </application>
 </manifest>
