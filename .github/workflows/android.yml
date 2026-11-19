@@ -22,6 +22,18 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
+      - name: Adapt Winlator rootfs bootstrap to the host Activity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("vendor/winlator-app/app/src/main/java/com/winlator/xenvironment/RootFSInstaller.java")
+          source = path.read_text()
+          source = source.replace("public static void install(final MainActivity activity)", "public static void install(final AppCompatActivity activity)")
+          source = source.replace("public static void installIfNeeded(final MainActivity activity)", "public static void installIfNeeded(final AppCompatActivity activity)")
+          if "public static void install(final AppCompatActivity activity)" not in source:
+              raise SystemExit("Winlator RootFSInstaller patch did not apply")
+          path.write_text(source)
+          PY
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
       - name: Upload APK artifact
