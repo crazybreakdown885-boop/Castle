@@ -74,6 +74,15 @@ jobs:
           source = main.read_text()
           source = source.replace("if (!requestAppPermissions()) RootFSInstaller.installIfNeeded(this);", "RootFSInstaller.installIfNeeded(this);")
           main.write_text(source)
+
+          file_utils = Path("vendor/winlator-app/app/src/main/java/com/winlator/core/FileUtils.java")
+          source = file_utils.read_text()
+          if "com.winlator.FileProvider" not in source:
+              raise SystemExit("Winlator FileProvider authority was not found")
+          file_utils.write_text(source.replace(
+              "com.winlator.FileProvider",
+              "com.crazybreakdown.castlecrashers.mobile.FileProvider"
+          ))
           PY
 
       - name: Restore stable Android debug signing identity
