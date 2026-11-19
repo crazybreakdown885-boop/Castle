@@ -1,4 +1,4 @@
-name: Build Android APK and publish Release
+name: Build Castle Mobile 0.3.0 Android APK and publish
 
 on:
   push:
@@ -12,29 +12,92 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout v0.3.0 source
+      - name: Checkout v0.3.0 source with Winlator submodules
         uses: actions/checkout@v4
         with:
           ref: v0.3.0
+          submodules: recursive
+          fetch-depth: 0
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
-      - name: Build debug APK
+
+      - name: Apply Winlator host and touchscreen integration patches
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("vendor/winlator-app/app/src/main/java/com/winlator/xenvironment/RootFSInstaller.java")
+          source = path.read_text()
+          source = source.replace("public static void install(final MainActivity activity)", "public static void install(final AppCompatActivity activity)")
+          source = source.replace("public static void installIfNeeded(final MainActivity activity)", "public static void installIfNeeded(final AppCompatActivity activity)")
+          if "public static void install(final AppCompatActivity activity)" not in source:
+              raise SystemExit("RootFSInstaller patch did not apply")
+          path.write_text(source)
+
+          display = Path("vendor/winlator-app/app/src/main/java/com/winlator/XServerDisplayActivity.java")
+          source = display.read_text()
+          old = """        if (shortcut != null) {
+                      String controlsProfile = shortcut.getExtra("controlsProfile");
+                      if (!controlsProfile.isEmpty()) {
+                          ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));
+                          if (profile != null) showInputControls(profile);
+                      }
+                  }
+          """
+          new = old + """        else if (getIntent().getBooleanExtra("castle_touch_controls", true)) {
+                      ControlsProfile profile = inputControlsManager.getProfile(3);
+                      if (profile != null) showInputControls(profile);
+                  }
+          """
+          if old not in source:
+              raise SystemExit("Touchscreen profile patch did not apply")
+          display.write_text(source.replace(old, new, 1))
+
+          main = Path("vendor/winlator-app/app/src/main/java/com/winlator/MainActivity.java")
+          source = main.read_text()
+          source = source.replace("if (!requestAppPermissions()) RootFSInstaller.installIfNeeded(this);", "RootFSInstaller.installIfNeeded(this);")
+          main.write_text(source)
+          PY
+
+      - name: Build Android APK
         run: gradle --no-daemon :app:assembleDebug
+
+      - name: Verify APK contains embedded Windows runtime
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          test -s "$APK"
+          unzip -l "$APK" > apk-contents.txt
+          grep -q "assets/rootfs.tzst" apk-contents.txt
+          grep -q "assets/container_pattern.tzst" apk-contents.txt
+          grep -q "assets/box64/" apk-contents.txt
+          grep -q "assets/pulseaudio.tzst" apk-contents.txt
+          grep -q "assets/inputcontrols/profiles/controls-3.icp" apk-contents.txt
+          grep -q "lib/arm64-v8a/libzstd-jni-1.5.2-3.so" apk-contents.txt
+          grep -q "lib/arm64-v8a/libwinlator.so" apk-contents.txt
+          grep -q "lib/arm64-v8a/libvortekrenderer.so" apk-contents.txt
+          grep -q "lib/arm64-v8a/libgladiorenderer.so" apk-contents.txt
+          grep -q "lib/arm64-v8a/libvirglrenderer.so" apk-contents.txt
+          grep -q "lib/arm64-v8a/libmidihandler.so" apk-contents.txt
+          cp "$APK" CastleMobile-0.3.0.apk
+          ls -lh CastleMobile-0.3.0.apk
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CastleMobile-v0.3.0-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: CastleMobile-0.3.0
+          path: CastleMobile-0.3.0.apk
           if-no-files-found: error
           retention-days: 14
-      - name: Publish APK in GitHub Releases
+
+      - name: Publish verified APK to v0.3.0 Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v0.3.0
@@ -42,6 +105,8 @@ jobs:
           prerelease: false
           make_latest: true
           overwrite_files: true
-          files: app/build/outputs/apk/debug/app-debug.apk
+          files: CastleMobile-0.3.0.apk
+          fail_on_unmatched_files: true
           body: |
-            APK Android da versão 0.3.0.
+            APK Android v0.3.0 com runtime Windows/Winlator integrado.
+            O workflow verifica os arquivos essenciais do runtime antes da publicação.
