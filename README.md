@@ -1,46 +1,45 @@
-# Castle Mobile 0.3.0
+# Castle Crashers V1 — Android
 
-Android app that imports a user's Castle Crashers Windows game folder and launches it through an **embedded Winlator/Wine/Box64 runtime**. The runtime source, ARM64 native libraries and rootfs assets are built into the same APK; a separate Winlator installation is not required.
+Port Android baseado no runtime Winlator integrado ao próprio APK. O aplicativo importa uma instalação Windows fornecida pelo usuário e tenta executá-la em um contêiner Wine/Box64 ARM64.
 
-## Included in 0.3.0
+## V1.0.0
 
-- SAF folder import into app-private storage, with transactional replacement.
-- PE inspection to verify that `castle.exe` is Windows x86/32-bit.
-- Embedded Winlator engine source, Wine WoW64 rootfs, Box64, native X server/renderers, audio runtime and graphics-driver assets.
-- Automatic Wine container creation and game copy into `C:\\CastleCrashers`.
-- Launch through Winlator's X server activity.
-- Settings applied to the Wine container: resolution, PulseAudio volume, DXVK/WineD3D and Vulkan/OpenGL driver combinations.
-- Winlator's virtual Xbox-style gamepad profile for touchscreen play.
-- Winlator input support for keyboard, mouse and up to four XInput gamepad slots with automatic controller assignment.
+- Winlator integrado no mesmo APK (não exige instalar o Winlator separadamente).
+- Importação da pasta completa do jogo por seletor de documentos Android.
+- Verificação PE para confirmar castle.exe Windows x86/32-bit.
+- Criação do contêiner Wine e cópia dos arquivos para o disco C:.
+- Configurações de resolução, áudio, DXVK/WineD3D e drivers gráficos.
+- Controles virtuais Xbox e suporte do runtime a controles externos, teclado e mouse.
+- Descoberta de salas LAN experimental.
+- Identidade Android separada da versão de teste anterior para evitar conflito com assinaturas antigas.
 
-The APK does **not** contain the game. Import a game folder that you are legally entitled to use.
+O APK não inclui Castle.exe nem arquivos comerciais do jogo. Importe uma cópia do jogo que você tenha direito de usar. O arquivo ZIP fornecido para análise não será redistribuído no APK ou no repositório.
 
-## Build result
+## Download
 
-GitHub Actions run [44598256750](https://github.com/crazybreakdown885-boop/Castle/actions/runs/44598212504) completed successfully and verified the embedded runtime payload.
+A Release Castle Crashers V1 publica um único arquivo instalável:
+Castle-Crashers-v1.0.0-arm64.apk.
 
-Download the `CastleMobile-0.3.0-debug` artifact from that run's **Artifacts** section. It is a debug APK artifact, not a signed Play Store release.
+O workflow verifica a presença do runtime integrado, das bibliotecas ARM64 e da assinatura antes de publicar. O APK de teste pequeno não será anexado à Release.
 
-## Important limitations
+## Interface e arte
 
-- CI confirms compilation and that runtime assets are packaged. The game has **not** been launched on the Moto G7 Play; the device test is left to the user.
-- The Snapdragon 632 / Adreno 506 may need a different graphics-driver or WineD3D setting if the default Vulkan path is unstable or slow.
-- Local co-op input on one phone is the current multiplayer target.
-- LAN room discovery is only discovery; LAN gameplay synchronization is not implemented.
-- Steam friends, matchmaking, invites and Steamworks online networking are not implemented.
+A interface está preparada para receber o banner/ícone oficial ou fan art com permissão de uso. Não será usada arte gerada artificialmente nem obra de fã sem licença/atribuição. As imagens que o usuário ainda vai enviar serão integradas na revisão visual seguinte.
 
-## Build from source
+## Limitações conhecidas
 
-Clone with submodules:
+- A compilação e a inclusão do runtime podem ser verificadas em CI; isso não substitui o teste real do jogo em um telefone.
+- O primeiro início precisa extrair o rootfs Wine e criar o prefixo, exigindo espaço livre considerável.
+- LAN atualmente é apenas descoberta de salas, não sincroniza uma partida.
+- Steam friends, convites, matchmaking e Steamworks online não estão implementados.
+- O suporte gráfico varia conforme GPU/driver. No Moto G7 Play/Adreno 506, teste WineD3D/OpenGL caso DXVK/Vulkan apresente falhas.
 
-```bash
-git clone --recurse-submodules https://github.com/crazybreakdown885-boop/Castle.git
-cd Castle
-gradle --no-daemon :app:assembleDebug
-```
+## Compilar
 
-Requirements: JDK 17, Android SDK 35, Android NDK 24.0.8215888 and CMake 3.22.1. The GitHub Actions workflow applies the small host-activity/touch-profile adaptation to the pinned Winlator submodule before building.
+Requisitos: JDK 17, Android SDK 35, NDK 24.0.8215888, CMake 3.22.1 e Git com submódulos.
 
-## Licensing and game files
+    git clone --recurse-submodules https://github.com/crazybreakdown885-boop/Castle.git
+    cd Castle
+    gradle --no-daemon :app:assembleDebug
 
-See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). The game EXE, DLLs and data are user-provided and must not be committed or redistributed in this repository.
+A integração usa o código Winlator upstream fixado como submódulo. Consulte THIRD_PARTY_NOTICES.md para licenças e créditos.
