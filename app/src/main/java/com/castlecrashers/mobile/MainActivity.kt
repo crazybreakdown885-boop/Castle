@@ -18,6 +18,7 @@ import androidx.documentfile.provider.DocumentFile
 import java.io.File
 
 class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
+    // Castle Crashers PC-style landscape launcher.
     private lateinit var status: TextView
     private lateinit var devices: TextView
     private lateinit var input: InputManager
