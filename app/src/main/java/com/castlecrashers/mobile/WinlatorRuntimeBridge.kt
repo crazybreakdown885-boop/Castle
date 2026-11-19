@@ -193,8 +193,8 @@ object WinlatorRuntimeBridge {
         container.setBox64Preset(box64Preset)
         container.setHUDMode(
             if (prefs.getBoolean("performance_hud", true))
-                com.winlator.widget.FrameRating.Mode.FULL.ordinal().toByte()
-            else com.winlator.widget.FrameRating.Mode.DISABLED.ordinal().toByte()
+                com.winlator.widget.FrameRating.Mode.FULL.ordinal.toByte()
+            else com.winlator.widget.FrameRating.Mode.DISABLED.ordinal.toByte()
         )
         container.saveData()
     }
