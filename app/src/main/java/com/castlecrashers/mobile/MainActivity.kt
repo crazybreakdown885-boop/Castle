@@ -191,7 +191,7 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
     private fun startGame() {
         val installed = prefs.getString("game_install_path", null)?.let { File(it) }
         val exe = installed?.walkTopDown()?.firstOrNull { it.isFile && it.name.equals("castle.exe", true) }
-        if (exe == null) {
+        if (installed == null || exe == null) {
             status.text = "Importe a pasta completa do jogo antes de iniciar."
             return
         }
@@ -199,24 +199,14 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             status.text = "Executável inválido: ${e.message}"
             return
         }
-        val runtime = File(filesDir, "runtime")
-        val required = listOf(
-            File(runtime, "bin/box64"),
-            File(runtime, "rootfs"),
-            File(runtime, "launch-castle.sh")
-        )
-        val missing = required.filterNot { it.exists() }
-        if (missing.isNotEmpty()) {
-            AlertDialog.Builder(this).setTitle("Runtime ainda não integrado")
-                .setMessage("Castle.exe foi validado como PE ${pe.architecture}/${pe.bits}-bit.\n\n" +
-                    "Faltam componentes do runtime integrado:\n" +
-                    missing.joinToString("\n") { it.relativeTo(filesDir).path } +
-                    "\n\nNão vou fingir que o EXE foi iniciado: o pacote Wine WoW64/Box64, rootfs e inicializador ainda precisam ser incorporados ao APK.")
-                .setPositiveButton("OK", null).show()
-            status.text = "Jogo importado e validado; runtime Windows ainda ausente."
+        if (pe.machine != 0x014C || pe.bits != 32) {
+            status.text = "O runtime está configurado para o Castle Crashers Windows x86/32-bit."
             return
         }
-        status.text = "Runtime encontrado, mas o bootstrap gráfico ainda precisa ser conectado ao servidor X/entrada Android."
+        status.text = "Iniciando o runtime Windows integrado…"
+        WinlatorRuntimeBridge.launch(this, installed, exe) { message ->
+            runOnUiThread { status.text = message }
+        }
     }
 
     private fun refreshControllers() {
