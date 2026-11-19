@@ -68,7 +68,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.crazybreakdown.castlecrashers.mobile.FileProvider"
+            android:authorities="com.crazybreakdown.castlecrashers.mobile.v101.FileProvider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
