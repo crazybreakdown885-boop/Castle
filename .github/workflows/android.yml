@@ -95,6 +95,8 @@ jobs:
         run: |
           grep -q "com.crazybreakdown.castlecrashers.mobile.FileProvider" app/src/main/AndroidManifest.xml
           grep -q "com.crazybreakdown.castlecrashers.mobile.FileProvider" vendor/winlator-app/app/src/main/java/com/winlator/core/FileUtils.java
+          grep -q "public static synchronized int getUsage()" vendor/winlator-app/app/src/main/java/com/winlator/core/CPUStatus.java
+          grep -q "CPUStatus.getUsage()" vendor/winlator-app/app/src/main/java/com/winlator/widget/FrameRating.java
 
       - name: Add system CPU utilization to the Winlator performance HUD
         run: |
