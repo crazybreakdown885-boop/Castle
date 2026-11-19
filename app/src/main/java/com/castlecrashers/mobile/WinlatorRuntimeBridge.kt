@@ -135,6 +135,7 @@ object WinlatorRuntimeBridge {
                         val intent = Intent(activity, XServerDisplayActivity::class.java).apply {
                             putExtra("container_id", container.id)
                             putExtra("exec_path", targetExe.absolutePath)
+                            putExtra("castle_touch_controls", activity.getSharedPreferences("castle_v3", android.content.Context.MODE_PRIVATE).getBoolean("touch", true))
                         }
                         activity.startActivity(intent)
                     } catch (error: Exception) {
