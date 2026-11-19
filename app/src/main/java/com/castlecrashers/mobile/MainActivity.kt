@@ -2,7 +2,6 @@ package com.castlecrashers.mobile
 
 import androidx.appcompat.app.AppCompatActivity
 import android.app.AlertDialog
-import android.graphics.BitmapFactory
 import android.widget.ImageView
 import android.content.Context
 import android.content.Intent
