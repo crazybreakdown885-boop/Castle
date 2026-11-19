@@ -103,7 +103,7 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         })
         menu.addView(menuButton("CREDITS", 0xff75604b.toInt()) {
             AlertDialog.Builder(this).setTitle("CASTLE CRASHERS")
-                .setMessage("Castle Crashers é uma criação da The Behemoth.\\n\\nEste launcher Android integra o runtime Winlator para executar uma cópia legítima do jogo para Windows.")
+                .setMessage("Castle Crashers é uma criação da The Behemoth.\n\nEste launcher Android integra o runtime Winlator para executar uma cópia legítima do jogo para Windows.")
                 .setPositiveButton("OK", null).show()
         })
         menu.addView(gap(12))
