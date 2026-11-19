@@ -52,13 +52,13 @@ jobs:
             if (!controlsProfile.isEmpty()) {
                 ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));
                 if (profile != null) showInputControls(profile);
-                      }
-                  }
+            }
+        }
           """
           new = old + """        else if (getIntent().getBooleanExtra("castle_touch_controls", true)) {
             ControlsProfile profile = inputControlsManager.getProfile(3);
             if (profile != null) showInputControls(profile);
-                  }
+        }
           """
           if old not in source:
               raise SystemExit("Winlator touch profile adaptation failed")
