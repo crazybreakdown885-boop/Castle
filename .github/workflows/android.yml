@@ -3,6 +3,8 @@ name: Castle Crashers V1 — Android APK and Release
 on:
   push:
     branches: [ "main", "castle-v1.0.0-final" ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
 
 concurrency:
