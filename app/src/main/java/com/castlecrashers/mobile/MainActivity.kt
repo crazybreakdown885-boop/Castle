@@ -264,6 +264,20 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             setSelection(prefs.getInt("renderer", 0))
         }
         panel.addView(renderer)
+        panel.addView(text("Driver gráfico", 14f))
+        val graphicsDrivers = arrayOf(
+            "Automático (recomendado)",
+            "Turnip + Gladio",
+            "Vortek + Gladio",
+            "Turnip + Zink",
+            "Vortek + VirGL",
+            "Vortek + Gladio (compatibilidade)"
+        )
+        val graphicsDriver = Spinner(this).apply {
+            adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, graphicsDrivers)
+            setSelection(prefs.getInt("graphics_driver", 0))
+        }
+        panel.addView(graphicsDriver)
         panel.addView(text("Volume do jogo", 14f))
         val volume = SeekBar(this).apply { max = 100; progress = prefs.getInt("volume", 80) }
         panel.addView(volume)
@@ -273,8 +287,9 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         AlertDialog.Builder(this).setTitle("Configurações").setView(panel)
             .setPositiveButton("Salvar") { _, _ ->
                 prefs.edit().putInt("resolution", resolution.selectedItemPosition).putInt("renderer", renderer.selectedItemPosition)
-                    .putInt("volume", volume.progress).putBoolean("touch", touch.isChecked).apply()
-                status.text = "Preferências salvas. Aplicação real depende do runtime."
+                    .putInt("graphics_driver", graphicsDriver.selectedItemPosition).putInt("volume", volume.progress)
+                    .putBoolean("touch", touch.isChecked).apply()
+                status.text = "Configurações salvas e aplicadas na próxima inicialização do jogo."
             }.setNegativeButton("Cancelar", null).show()
     }
 
