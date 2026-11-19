@@ -4,7 +4,7 @@
 
 ### Game archive supplied in this conversation
 - Archive: `CastleCrashers Opti.zip`
-- 700 total ZIP entries, including 664 files under `data` and 32 entries under `steam_settings`.
+- 713 ZIP entries total (702 files), including 664 files under `data` and 34 entries under `steam_settings`.
 - Main executable: `castle.exe` (1,943,552 bytes).
 - Adjacent Windows modules include `D3DX9_43.dll`, `dinput8.dll`, `steam_api.dll`, and `optiprojects.asi`.
 - PE COFF machine for `castle.exe` and the listed DLLs: `0x014c` (IMAGE_FILE_MACHINE_I386); PE optional-header magic: `0x010b` (PE32). This is a 32-bit Windows x86 program, not an x86-64 Windows program.
