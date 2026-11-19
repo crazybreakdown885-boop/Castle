@@ -271,7 +271,7 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             "Vortek + Gladio",
             "Turnip + Zink",
             "Vortek + VirGL",
-            "Vortek + Gladio (compatibilidade)"
+            "Vortek + Zink (compatibilidade)"
         )
         val graphicsDriver = Spinner(this).apply {
             adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, graphicsDrivers)
