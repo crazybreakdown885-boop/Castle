@@ -144,10 +144,12 @@ jobs:
           source = source.replace("import com.winlator.box64.Box64Utils;\\n", "")
           source = source.replace("    private String cpuInfo = null;\\n", "")
           old_info = """            if (cpuInfo == null) {
-                          cpuInfo = "Box64 v"+ Box64Utils.extractBinVersion(cpuPanel.getContext());
-                      }
+                cpuInfo = "Box64 v"+ Box64Utils.extractBinVersion(cpuPanel.getContext());
+            }
 
           """
+          if old_info not in source:
+              raise SystemExit("FrameRating CPU info block not found")
           source = source.replace(old_info, "")
           old_text = '            ((TextView)cpuPanel.getChildAt(1)).setText(CPUStatus.formatClockSpeed(maxClockSpeed)+" | "+cpuInfo);'
           new_text = """            int cpuUsage = CPUStatus.getUsage();
