@@ -133,11 +133,11 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         val button = TextView(this).apply {
             text = label; textSize = 14f; gravity = android.view.Gravity.CENTER_VERTICAL
             typeface = android.graphics.Typeface.create("serif", android.graphics.Typeface.BOLD)
-            setTextColor(0xffffefd0.toInt()); setPadding(dp(17), 0, dp(12), 0)
+            setTextColor(0xff241d22.toInt()); setPadding(dp(17), 0, dp(12), 0)
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(0xff51402f.toInt(), 0xff342b29.toInt(), 0xff211c22.toInt())
-            ).apply { cornerRadius = dp(2).toFloat(); setStroke(dp(2), accent) }
+                intArrayOf(accent, accent)
+            ).apply { cornerRadius = dp(5).toFloat(); setStroke(dp(2), 0xffffe7bd.toInt()) }
             isClickable = true; isFocusable = true; setOnClickListener { action() }
         }
         button.layoutParams = LinearLayout.LayoutParams(-1, dp(40)).apply { bottomMargin = dp(5) }
