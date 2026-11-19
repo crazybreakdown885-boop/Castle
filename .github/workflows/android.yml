@@ -7,7 +7,7 @@ concurrency:
   group: castle-mobile-${{ github.ref }}
   cancel-in-progress: true
 permissions:
-  contents: read
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -38,8 +38,26 @@ jobs:
           path.write_text(source)
           display = Path("vendor/winlator-app/app/src/main/java/com/winlator/XServerDisplayActivity.java")
           source = display.read_text()
-          old = "        if (shortcut != null) {\n            String controlsProfile = shortcut.getExtra(\"controlsProfile\");\n            if (!controlsProfile.isEmpty()) {\n                ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));\n                if (profile != null) showInputControls(profile);\n            }\n        }\n"
-          new = "        if (shortcut != null) {\n            String controlsProfile = shortcut.getExtra(\"controlsProfile\");\n            if (!controlsProfile.isEmpty()) {\n                ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));\n                if (profile != null) showInputControls(profile);\n            }\n        }\n        else if (getIntent().getBooleanExtra(\"castle_touch_controls\", true)) {\n            ControlsProfile profile = inputControlsManager.getProfile(3);\n            if (profile != null) showInputControls(profile);\n        }\n"
+          old = "        if (shortcut != null) {
+            String controlsProfile = shortcut.getExtra(\"controlsProfile\");
+            if (!controlsProfile.isEmpty()) {
+                ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));
+                if (profile != null) showInputControls(profile);
+            }
+        }
+"
+          new = "        if (shortcut != null) {
+            String controlsProfile = shortcut.getExtra(\"controlsProfile\");
+            if (!controlsProfile.isEmpty()) {
+                ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));
+                if (profile != null) showInputControls(profile);
+            }
+        }
+        else if (getIntent().getBooleanExtra(\"castle_touch_controls\", true)) {
+            ControlsProfile profile = inputControlsManager.getProfile(3);
+            if (profile != null) showInputControls(profile);
+        }
+"
           if old not in source:
               raise SystemExit("Winlator touchscreen profile patch did not apply")
           display.write_text(source.replace(old, new))
@@ -64,7 +82,9 @@ jobs:
           grep -q "lib/arm64-v8a/libvortekrenderer.so" apk-contents.txt
           grep -q "lib/arm64-v8a/libgladiorenderer.so" apk-contents.txt
           grep -q "lib/arm64-v8a/libvirglrenderer.so" apk-contents.txt
-          grep -q "lib/arm64-v8a/libmidihandler.so" apk-contents.txt\n          cp "$APK" CastleMobile-0.3.1.apk\n          test -s CastleMobile-0.3.1.apk
+          grep -q "lib/arm64-v8a/libmidihandler.so" apk-contents.txt
+          cp "$APK" CastleMobile-0.3.1.apk
+          test -s CastleMobile-0.3.1.apk
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
