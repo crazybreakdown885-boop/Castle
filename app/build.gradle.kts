@@ -9,7 +9,7 @@ android {
     ndkVersion = "24.0.8215888"
 
     defaultConfig {
-        applicationId = "com.crazybreakdown.castlemobile.v032"
+        applicationId = "com.crazybreakdown.castlecrashers.mobile"
         minSdk = 26
         targetSdk = 35
         versionCode = 8
