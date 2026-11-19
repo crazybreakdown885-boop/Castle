@@ -8,6 +8,9 @@ import android.os.SystemClock
 import com.winlator.XServerDisplayActivity
 import com.winlator.container.Container
 import com.winlator.container.ContainerManager
+import com.winlator.container.AudioDrivers
+import com.winlator.container.DXWrappers
+import com.winlator.container.GraphicsDrivers
 import com.winlator.xenvironment.RootFS
 import com.winlator.xenvironment.RootFSInstaller
 import org.json.JSONObject
@@ -126,6 +129,7 @@ object WinlatorRuntimeBridge {
 
                 activity.runOnUiThread {
                     try {
+                        applyContainerSettings(activity, container)
                         manager.activateContainer(container)
                         onStatus("Abrindo Castle Crashers no runtime integrado…")
                         val intent = Intent(activity, XServerDisplayActivity::class.java).apply {
@@ -143,6 +147,23 @@ object WinlatorRuntimeBridge {
                 }
             }
         }.start()
+    }
+
+    private fun applyContainerSettings(activity: AppCompatActivity, container: Container) {
+        val prefs = activity.getSharedPreferences("castle_v3", android.content.Context.MODE_PRIVATE)
+        val resolution = when (prefs.getInt("resolution", 0)) {
+            1 -> "1280x720"
+            2 -> "960x540"
+            3 -> "854x480"
+            4 -> "640x360"
+            else -> "854x480"
+        }
+        container.setScreenSize(resolution)
+        container.setAudioDriver(AudioDrivers.PULSEAUDIO)
+        container.setAudioDriverConfig("volume=" + (prefs.getInt("volume", 80) / 100.0))
+        container.setGraphicsDriver(GraphicsDrivers.getDefaultDriver(activity))
+        container.setDXWrapper(if (prefs.getInt("renderer", 0) == 1) DXWrappers.WINED3D else DXWrappers.DXVK)
+        container.saveData()
     }
 
     private fun copyTree(source: File, destination: File) {
