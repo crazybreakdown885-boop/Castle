@@ -54,7 +54,7 @@ Implemented in branch `v0.3.0`:
 
 Confirmed by CI:
 - The merged app module and native CMake targets compile successfully.
-- GitHub Actions run `44598212504` produced a 160,824,665-byte debug APK and passed checks for the embedded rootfs, Box64, zstd JNI, audio, touch profile and native graphics libraries.
+- GitHub Actions run `44598256750` produced a 160,824,710-byte debug APK and passed checks for the embedded rootfs, Box64, zstd JNI, audio, touch profile and native graphics libraries.
 
 Still awaiting device validation:
 - First launch, Wine prefix creation, D3D9 rendering, sound and controller behavior on the Moto G7 Play. The user will perform this test.
