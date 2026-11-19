@@ -67,6 +67,12 @@ jobs:
           main.write_text(source)
           PY
 
+      - name: Prepare Castle Crashers hero image
+        run: |
+          mkdir -p app/src/main/assets
+          base64 -d app/src/main/assets/castle_hero.webp.b64 > app/src/main/assets/castle_hero.webp
+          test -s app/src/main/assets/castle_hero.webp
+
       - name: Build Android APK
         run: gradle --no-daemon :app:assembleDebug
 
