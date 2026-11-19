@@ -3,7 +3,6 @@ package com.castlecrashers.mobile
 import androidx.appcompat.app.AppCompatActivity
 import android.app.AlertDialog
 import android.widget.ImageView
-import android.content.Context
 import android.content.Intent
 import android.hardware.input.InputManager
 import android.net.Uri
@@ -439,35 +438,5 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
     override fun onDestroy() {
         input.unregisterInputDeviceListener(this)
         super.onDestroy()
-    }
-}
-
-private class VirtualPad(context: Context, val changed: (String) -> Unit) : View(context) {
-    private val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
-    override fun onDraw(c: android.graphics.Canvas) {
-        c.drawColor(0xff151b2a.toInt())
-        val w = width.toFloat(); val h = height.toFloat()
-        p.color = 0xff40516d.toInt()
-        c.drawCircle(w*.23f, h*.53f, h*.27f, p)
-        p.color = 0xff7385a0.toInt(); c.drawCircle(w*.23f, h*.53f, h*.12f, p)
-        val pts = arrayOf(.72f to .34f, .88f to .52f, .72f to .70f, .56f to .52f)
-        val names = arrayOf("Y", "B", "A", "X")
-        pts.forEachIndexed { i, pt ->
-            p.color = intArrayOf(0xff4c9c69.toInt(),0xffbb5554.toInt(),0xff478db5.toInt(),0xffbd9a4c.toInt())[i]
-            c.drawCircle(w*pt.first, h*pt.second, h*.075f, p)
-            p.color = -1; p.textSize = h*.07f
-            c.drawText(names[i], w*pt.first-p.measureText(names[i])/2, h*pt.second+h*.025f, p)
-        }
-        p.color = 0xffffe0a0.toInt(); p.textSize = h*.05f
-        c.drawText("D-PAD", w*.17f, h*.9f, p); c.drawText("A  B  X  Y", w*.65f, h*.9f, p)
-    }
-    override fun onTouchEvent(e: MotionEvent): Boolean {
-        if (e.action == MotionEvent.ACTION_DOWN || e.action == MotionEvent.ACTION_MOVE) {
-            val x=e.x/width; val y=e.y/height
-            val key = if (x < .45f) when { y < .4f -> "DPAD_UP"; y > .68f -> "DPAD_DOWN"; x < .18f -> "DPAD_LEFT"; else -> "DPAD_RIGHT" }
-                else when { y < .42f -> "Y"; y > .65f -> "A"; x > .8f -> "B"; else -> "X" }
-            changed(key)
-        }
-        return true
     }
 }
