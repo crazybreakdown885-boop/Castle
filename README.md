@@ -50,3 +50,6 @@ O build da branch principal é publicado somente após as verificações do APK 
 
 
 As pull requests verificam o mesmo runtime ARM64, tamanho do APK, bibliotecas nativas, licenças e assinatura exigidos no build de release. A publicação anexa um único APK ARM64 e seu checksum SHA-256.
+
+
+Android package-conflict fix build: version 1.0.1 uses an isolated application ID and persistent signing identity.
