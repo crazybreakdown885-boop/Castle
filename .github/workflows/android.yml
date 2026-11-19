@@ -28,6 +28,23 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Download official Castle Crashers PC artwork
+        run: |
+          mkdir -p app/src/main/res/drawable-nodpi
+          curl -fL --retry 3 https://cdn.cloudflare.steamstatic.com/steam/apps/204360/header.jpg -o app/src/main/res/drawable-nodpi/castle_header.jpg || curl -fL --retry 3 https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/204360/header.jpg -o app/src/main/res/drawable-nodpi/castle_header.jpg
+          python3 -m pip install --user Pillow
+          python3 - <<'PY'
+          from PIL import Image
+          source = Image.open("app/src/main/res/drawable-nodpi/castle_header.jpg").convert("RGB")
+          width, height = source.size
+          side = min(width, height)
+          left = (width - side) // 2
+          top = (height - side) // 2
+          source.crop((left, top, left + side, top + side)).resize((512, 512), Image.Resampling.LANCZOS).save("app/src/main/res/drawable-nodpi/castle_pc_icon.jpg", quality=92)
+          PY
+          test -s app/src/main/res/drawable-nodpi/castle_pc_icon.jpg
+          test -s app/src/main/res/drawable-nodpi/castle_header.jpg
+
       - name: Include upstream license and notice files in the APK
         run: |
           mkdir -p app/src/main/assets/licenses
