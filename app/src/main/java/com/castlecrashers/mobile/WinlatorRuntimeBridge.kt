@@ -162,7 +162,7 @@ object WinlatorRuntimeBridge {
             else -> "854x480"
         }
         container.setScreenSize(resolution)
-        container.setAudioDriver(AudioDrivers.PULSEAUDIO)
+        container.setAudioDriver(if (prefs.getInt("audio_driver", 0) == 1) AudioDrivers.ALSA else AudioDrivers.PULSEAUDIO)
         container.setAudioDriverConfig("volume=" + (prefs.getInt("volume", 80) / 100.0))
         val graphicsDriver = when (prefs.getInt("graphics_driver", 0)) {
             1 -> GraphicsDrivers.TURNIP + "," + GraphicsDrivers.GLADIO
