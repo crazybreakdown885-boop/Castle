@@ -59,6 +59,11 @@ jobs:
           if old not in source:
               raise SystemExit("Winlator touchscreen profile patch did not apply")
           display.write_text(source)
+
+          main = Path("vendor/winlator-app/app/src/main/java/com/winlator/MainActivity.java")
+          source = main.read_text()
+          source = source.replace("if (!requestAppPermissions()) RootFSInstaller.installIfNeeded(this);", "RootFSInstaller.installIfNeeded(this);")
+          main.write_text(source)
           PY
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
