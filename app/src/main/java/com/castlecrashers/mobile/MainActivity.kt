@@ -125,7 +125,7 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         page.addView(gap(14))
         page.addView(text("MULTIPLAYER LOCAL", 18f, 0xffffd28a.toInt()))
         page.addView(gap(5))
-        page.addView(text("Descoberta de dispositivos na rede Wi-Fi. A sincronização de partidas ainda não está disponível.", 12f, 0xff9ca9bd.toInt()))
+        page.addView(text("Co-op no mesmo aparelho: até 4 controles XInput. LAN: descoberta de dispositivos na rede Wi-Fi, sem sincronização de partidas nesta versão.", 12f, 0xff9ca9bd.toInt()))
         page.addView(gap(7))
         page.addView(button("PROCURAR SALAS LAN", "Buscar anúncios locais na rede") { discoverRooms() })
         page.addView(button("ANUNCIAR SALA DE TESTE", "Anunciar este aparelho para descoberta") { advertiseRoom() })
