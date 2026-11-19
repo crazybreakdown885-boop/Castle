@@ -269,13 +269,11 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         panel.addView(volume)
         val touch = CheckBox(this).apply { text = "Mostrar controle touch"; isChecked = prefs.getBoolean("touch", true) }
         panel.addView(touch)
-        val auto = CheckBox(this).apply { text = "Mapear controles conectados automaticamente"; isChecked = prefs.getBoolean("auto_map", true) }
-        panel.addView(auto)
+        panel.addView(text("USB/Bluetooth: detecção e atribuição automática de até 4 controles pelo runtime.", 12f, 0xffaab2c5.toInt()))
         AlertDialog.Builder(this).setTitle("Configurações").setView(panel)
             .setPositiveButton("Salvar") { _, _ ->
                 prefs.edit().putInt("resolution", resolution.selectedItemPosition).putInt("renderer", renderer.selectedItemPosition)
-                    .putInt("volume", volume.progress).putBoolean("touch", touch.isChecked)
-                    .putBoolean("auto_map", auto.isChecked).apply()
+                    .putInt("volume", volume.progress).putBoolean("touch", touch.isChecked).apply()
                 status.text = "Preferências salvas. Aplicação real depende do runtime."
             }.setNegativeButton("Cancelar", null).show()
     }
