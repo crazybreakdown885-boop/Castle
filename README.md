@@ -17,7 +17,7 @@ The APK does **not** contain the game. Import a game folder that you are legally
 
 ## Build result
 
-GitHub Actions run [44598212504](https://github.com/crazybreakdown885-boop/Castle/actions/runs/44598212504) completed successfully and verified the embedded runtime payload.
+GitHub Actions run [44598256750](https://github.com/crazybreakdown885-boop/Castle/actions/runs/44598212504) completed successfully and verified the embedded runtime payload.
 
 Download the `CastleMobile-0.3.0-debug` artifact from that run's **Artifacts** section. It is a debug APK artifact, not a signed Play Store release.
 
