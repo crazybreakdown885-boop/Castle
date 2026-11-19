@@ -139,6 +139,25 @@ jobs:
               if old_state not in s: raise SystemExit("RootFS state completion patch point missing")
               s = s.replace(old_state, new_state, 1)
           p.write_text(s)
+
+          # Ensure container creation always reports a result to the launcher.
+          p = root / "container/ContainerManager.java"
+          s = p.read_text()
+          old = """            final Container container = createContainer(data);
+                      handler.post(() -> callback.call(container));"""
+          new = """            Container container;
+                      try {
+                          container = createContainer(data);
+                      } catch (Throwable error) {
+                          error.printStackTrace();
+                          container = null;
+                      }
+                      final Container result = container;
+                      handler.post(() -> callback.call(result));"""
+          if "final Container result = container;" not in s:
+              if old not in s: raise SystemExit("Container async callback patch point missing")
+              s = s.replace(old, new, 1)
+          p.write_text(s)
           PY
 
       - name: Verify isolated package identity
