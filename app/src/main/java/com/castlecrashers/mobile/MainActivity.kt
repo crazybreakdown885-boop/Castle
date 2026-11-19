@@ -53,53 +53,73 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         )
-        val page = FrameLayout(this).apply { setBackgroundColor(0xff17233a.toInt()) }
+        val page = FrameLayout(this).apply { setBackgroundColor(0xff17121b.toInt()) }
         val artwork = ImageView(this).apply {
             setImageResource(R.drawable.castle_header)
             scaleType = ImageView.ScaleType.CENTER_CROP
-            contentDescription = "Arte oficial de Castle Crashers"
+            contentDescription = "Arte de Castle Crashers"
         }
         page.addView(artwork, FrameLayout.LayoutParams(-1, -1))
-        val panelWidth = (resources.displayMetrics.widthPixels * 0.43f).toInt().coerceAtLeast(dp(300))
+        val shade = View(this).apply {
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(0xf20c0b12.toInt(), 0xe6101018.toInt(), 0x18101018)
+            )
+        }
+        page.addView(shade, FrameLayout.LayoutParams(-1, -1))
+
+        val panelWidth = (resources.displayMetrics.widthPixels * 0.42f).toInt().coerceAtLeast(dp(300))
         val menu = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER_VERTICAL
-            setPadding(dp(22), dp(18), dp(22), dp(22))
+            setPadding(dp(24), dp(16), dp(24), dp(16))
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(0xf0181720.toInt(), 0xe8242028.toInt(), 0xd91b1b26.toInt())
-            ).apply { cornerRadius = dp(5).toFloat(); setStroke(dp(2), 0xffc39a58.toInt()) }
+                intArrayOf(0xe91a1720.toInt(), 0xc91a1720.toInt(), 0x001a1720)
+            )
         }
         page.addView(menu, FrameLayout.LayoutParams(panelWidth, -1, android.view.Gravity.START))
-        menu.addView(text("CASTLE", 34f, 0xffffe6a6.toInt()).apply {
+
+        menu.addView(text("CASTLE CRASHERS", 25f, 0xffffe6a6.toInt()).apply {
             typeface = android.graphics.Typeface.create("serif", android.graphics.Typeface.BOLD_ITALIC)
-            letterSpacing = 0.04f
+            letterSpacing = -0.02f
             setShadowLayer(dp(3).toFloat(), dp(2).toFloat(), dp(3).toFloat(), 0xff120e16.toInt())
         })
-        menu.addView(text("CRASHERS", 31f, 0xffd94a36.toInt()).apply {
-            typeface = android.graphics.Typeface.create("serif", android.graphics.Typeface.BOLD_ITALIC)
-            setShadowLayer(dp(3).toFloat(), dp(2).toFloat(), dp(3).toFloat(), 0xff09090f.toInt())
+        menu.addView(text("THE BEHEMOTH  •  ANDROID EDITION", 9f, 0xffd9c39b.toInt()).apply {
+            letterSpacing = 0.12f
         })
-        menu.addView(text("THE KINGDOM NEEDS YOU", 10f, 0xffd8c6a0.toInt()).apply { letterSpacing = 0.16f })
-        menu.addView(gap(18))
-        menu.addView(menuButton("LOCAL GAME", 0xffb98b4b.toInt()) { startGame() })
-        menu.addView(menuButton("ONLINE MULTIPLAYER", 0xff8c4540.toInt()) {
-            AlertDialog.Builder(this).setTitle("Online Multiplayer")
-                .setMessage("Steamworks e partidas online ainda não estão integrados nesta versão. A descoberta LAN continua experimental.")
+        menu.addView(gap(20))
+        menu.addView(menuButton("LOCAL GAME", 0xffd2a65e.toInt()) { startGame() })
+        menu.addView(menuButton("XBOX LIVE", 0xff8c4540.toInt()) {
+            AlertDialog.Builder(this).setTitle("XBOX LIVE")
+                .setMessage("O multiplayer online do jogo original depende dos serviços da plataforma. Nesta versão, a conexão online ainda não está implementada.")
                 .setPositiveButton("OK", null).show()
         })
-        menu.addView(menuButton("HELP  &  OPTIONS", 0xff596c70.toInt()) { settings() })
-        menu.addView(menuButton("DOWNLOAD CONTENT", 0xff75604b.toInt()) { chooseFolder() })
-        menu.addView(gap(10))
-        val footer = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER }
-        footer.addView(menuFooterButton("CONTROLS", 0xff343642.toInt()) { touchInfo() }, LinearLayout.LayoutParams(0, dp(38), 1f))
-        footer.addView(menuFooterButton("QUIT", 0xff343642.toInt()) { finish() }, LinearLayout.LayoutParams(0, dp(38), 1f))
-        menu.addView(footer)
+        menu.addView(menuButton("HELP & OPTIONS", 0xffa18b69.toInt()) { settings() })
+        menu.addView(menuButton("LEADERBOARDS", 0xff756b59.toInt()) {
+            AlertDialog.Builder(this).setTitle("LEADERBOARDS")
+                .setMessage("Os placares online do jogo original ainda não estão disponíveis nesta versão.")
+                .setPositiveButton("OK", null).show()
+        })
+        menu.addView(menuButton("CREDITS", 0xff75604b.toInt()) {
+            AlertDialog.Builder(this).setTitle("CASTLE CRASHERS")
+                .setMessage("Castle Crashers é uma criação da The Behemoth.\\n\\nEste launcher Android integra o runtime Winlator para executar uma cópia legítima do jogo para Windows.")
+                .setPositiveButton("OK", null).show()
+        })
+        menu.addView(gap(12))
+        menu.addView(text("A  SELECT                         B  BACK", 9f, 0xffdfc99f.toInt()).apply {
+            gravity = android.view.Gravity.CENTER
+            letterSpacing = 0.08f
+        })
         devices = text("CONTROLES: procurando dispositivos…", 9f, 0xffe6d7bd.toInt()).apply {
-            gravity = android.view.Gravity.CENTER_VERTICAL; setPadding(0, dp(12), 0, 0); maxLines = 2
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(0, dp(8), 0, 0)
+            maxLines = 2
         }
-        status = text("Selecione LOCAL GAME para iniciar.", 10f, 0xffffd98b.toInt()).apply {
-            gravity = android.view.Gravity.CENTER_VERTICAL; setPadding(0, dp(4), 0, 0); maxLines = 2
+        status = text("SELECIONE LOCAL GAME", 10f, 0xffffd98b.toInt()).apply {
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(0, dp(4), 0, 0)
+            maxLines = 2
         }
         menu.addView(status)
         menu.addView(devices)
@@ -113,8 +133,8 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             setTextColor(0xffffefd0.toInt()); setPadding(dp(17), 0, dp(12), 0)
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(0xff4b4140.toInt(), 0xff28242b.toInt(), 0xff191820.toInt())
-            ).apply { cornerRadius = dp(3).toFloat(); setStroke(dp(1), accent) }
+                intArrayOf(0xff51402f.toInt(), 0xff342b29.toInt(), 0xff211c22.toInt())
+            ).apply { cornerRadius = dp(2).toFloat(); setStroke(dp(2), accent) }
             isClickable = true; isFocusable = true; setOnClickListener { action() }
         }
         button.layoutParams = LinearLayout.LayoutParams(-1, dp(46)).apply { bottomMargin = dp(8) }
