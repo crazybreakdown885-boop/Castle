@@ -49,4 +49,4 @@ A integração usa o código Winlator upstream fixado como submódulo. Consulte 
 O build da branch principal é publicado somente após as verificações do APK ARM64 completo.
 
 
-Pull requests run the same ARM64 runtime, APK size, native-library, license and signature checks as the release build.
+Pull requests run the same ARM64 runtime, APK size, native-library, license and signature checks as the release build. The release workflow attaches one ARM64 APK and its SHA-256 checksum.
