@@ -91,6 +91,11 @@ jobs:
           ))
           PY
 
+      - name: Verify isolated Android package and provider identity
+        run: |
+          grep -q "com.crazybreakdown.castlecrashers.mobile.FileProvider" app/src/main/AndroidManifest.xml
+          grep -q "com.crazybreakdown.castlecrashers.mobile.FileProvider" vendor/winlator-app/app/src/main/java/com/winlator/core/FileUtils.java
+
       - name: Restore stable Android debug signing identity
         uses: actions/cache@v4
         with:
