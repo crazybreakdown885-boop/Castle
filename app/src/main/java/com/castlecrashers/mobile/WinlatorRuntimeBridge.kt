@@ -162,7 +162,15 @@ object WinlatorRuntimeBridge {
         container.setScreenSize(resolution)
         container.setAudioDriver(AudioDrivers.PULSEAUDIO)
         container.setAudioDriverConfig("volume=" + (prefs.getInt("volume", 80) / 100.0))
-        container.setGraphicsDriver(GraphicsDrivers.getDefaultDriver(activity))
+        val graphicsDriver = when (prefs.getInt("graphics_driver", 0)) {
+            1 -> GraphicsDrivers.TURNIP + "," + GraphicsDrivers.GLADIO
+            2 -> GraphicsDrivers.VORTEK + "," + GraphicsDrivers.GLADIO
+            3 -> GraphicsDrivers.TURNIP + "," + GraphicsDrivers.ZINK
+            4 -> GraphicsDrivers.VORTEK + "," + GraphicsDrivers.VIRGL
+            5 -> GraphicsDrivers.VORTEK + "," + GraphicsDrivers.GLADIO
+            else -> GraphicsDrivers.getDefaultDriver(activity)
+        }
+        container.setGraphicsDriver(graphicsDriver)
         container.setDXWrapper(if (prefs.getInt("renderer", 0) == 1) DXWrappers.WINED3D else DXWrappers.DXVK)
         container.saveData()
     }
