@@ -2,6 +2,8 @@ package com.castlecrashers.mobile
 
 import androidx.appcompat.app.AppCompatActivity
 import android.app.AlertDialog
+import android.graphics.BitmapFactory
+import android.widget.ImageView
 import android.content.Context
 import android.content.Intent
 import android.hardware.input.InputManager
@@ -78,6 +80,13 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
                 setStroke(dp(1), 0xff65718a.toInt())
             }
         }
+        val artwork = ImageView(this).apply {
+            setImageBitmap(assets.open("castle_hero.webp").use { BitmapFactory.decodeStream(it) })
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            contentDescription = "Cavaleiros diante do castelo"
+        }
+        hero.addView(artwork, LinearLayout.LayoutParams(-1, dp(188)))
+        hero.addView(gap(12))
         hero.addView(text("A AVENTURA COMEÇA AQUI", 11f, 0xffffc96e.toInt()))
         hero.addView(gap(5))
         hero.addView(text("CASTLE\nCRASHERS", 34f, 0xfffff1d6.toInt()))
