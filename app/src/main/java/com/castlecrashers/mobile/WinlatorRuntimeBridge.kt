@@ -1,6 +1,7 @@
 package com.castlecrashers.mobile
 
 import androidx.appcompat.app.AppCompatActivity
+import android.app.ActivityManager
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
@@ -171,7 +172,16 @@ object WinlatorRuntimeBridge {
             else -> GraphicsDrivers.getDefaultDriver(activity)
         }
         container.setGraphicsDriver(graphicsDriver)
-        container.setDXWrapper(if (prefs.getInt("renderer", 0) == 1) DXWrappers.WINED3D else DXWrappers.DXVK)
+        val dxWrapper = when (prefs.getInt("renderer", 0)) {
+            1 -> DXWrappers.DXVK
+            2 -> DXWrappers.WINED3D
+            else -> {
+                val memory = ActivityManager.MemoryInfo()
+                (activity.getSystemService(android.content.Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(memory)
+                if (memory.totalMem <= 3L * 1024L * 1024L * 1024L) DXWrappers.WINED3D else DXWrappers.DXVK
+            }
+        }
+        container.setDXWrapper(dxWrapper)
         container.setHUDMode(
             if (prefs.getBoolean("performance_hud", true))
                 com.winlator.widget.FrameRating.Mode.FULL.ordinal().toByte()
