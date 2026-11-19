@@ -1,4 +1,4 @@
-name: Castle Crashers Android 1.0.3 — Menu and Startup Fix
+name: Castle Crashers Android 1.0.4 — Runtime and Original Menu
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: castle-android-103-menu-startup
+  group: castle-android-104-runtime-menu
   cancel-in-progress: true
 
 jobs:
@@ -108,6 +108,37 @@ jobs:
           if "com.winlator.FileProvider" not in s and "com.crazybreakdown.castlecrashers.mobile.v101.FileProvider" not in s:
               raise SystemExit("Winlator FileProvider authority not found")
           p.write_text(s.replace("com.winlator.FileProvider", "com.crazybreakdown.castlecrashers.mobile.v101.FileProvider"))
+
+          # Let the Castle launcher detect a failed RootFS extraction.
+          p = root / "xenvironment/RootFSInstaller.java"
+          s = p.read_text()
+          anchor = "        final File rootDir = rootFS.getRootDir();"
+          state_init = anchor + """
+                  final File castleState = new File(activity.getFilesDir(), ".castle_rootfs_install_state");
+                  try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
+                      out.write("installing".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                  } catch (Exception ignored) {}
+          """
+          if "castle_rootfs_install_state" not in s:
+              if anchor not in s: raise SystemExit("RootFS state init patch point missing")
+              s = s.replace(anchor, state_init, 1)
+          old_state = """            if (success) {
+                      rootFS.createRFSVersionFile(LATEST_VERSION);
+                      resetContainerRFSVersions(activity);
+                  }
+                  else AppUtils.showToast(activity, R.string.unable_to_install_system_files);"""
+          new_state = """            if (success) {
+                      rootFS.createRFSVersionFile(LATEST_VERSION);
+                      resetContainerRFSVersions(activity);
+                  }
+                  else AppUtils.showToast(activity, R.string.unable_to_install_system_files);
+                  try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
+                      out.write((success ? "ready" : "failed").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                  } catch (Exception ignored) {}"""
+          if 'out.write((success ? "ready" : "failed")' not in s:
+              if old_state not in s: raise SystemExit("RootFS state completion patch point missing")
+              s = s.replace(old_state, new_state, 1)
+          p.write_text(s)
           PY
 
       - name: Verify isolated package identity
@@ -142,19 +173,19 @@ jobs:
           grep -q "assets/rootfs.tzst" apk-files.txt
           grep -q "assets/box64/" apk-files.txt
           AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -n1)"
-          "$AAPT" dump badging "$APK" | grep -q "package: name='com.crazybreakdown.castlecrashers.mobile.v101' versionCode='11' versionName='1.0.3'"
+          "$AAPT" dump badging "$APK" | grep -q "package: name='com.crazybreakdown.castlecrashers.mobile.v101' versionCode='12' versionName='1.0.4'"
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n1)"
           "$APKSIGNER" verify --verbose "$APK"
           mkdir -p release
-          cp "$APK" release/Castle-Crashers-v1.0.3-arm64.apk
-          sha256sum release/Castle-Crashers-v1.0.3-arm64.apk > release/SHA256SUMS.txt
+          cp "$APK" release/Castle-Crashers-v1.0.4-arm64.apk
+          sha256sum release/Castle-Crashers-v1.0.4-arm64.apk > release/SHA256SUMS.txt
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Castle-Crashers-v1.0.3-ARM64
+          name: Castle-Crashers-v1.0.4-ARM64
           path: |
-            release/Castle-Crashers-v1.0.3-arm64.apk
+            release/Castle-Crashers-v1.0.4-arm64.apk
             release/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 30
@@ -163,14 +194,14 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.3
-          name: Castle Crashers V1.0.3
+          tag_name: v1.0.4
+          name: Castle Crashers V1.0.4
           make_latest: true
           overwrite_files: true
           files: |
-            release/Castle-Crashers-v1.0.3-arm64.apk
+            release/Castle-Crashers-v1.0.4-arm64.apk
             release/SHA256SUMS.txt
           fail_on_unmatched_files: true
           body: |
-            Castle Crashers Android 1.0.3 — original game artwork and safer first-run Wine startup.
+            Castle Crashers Android 1.0.4 — original game artwork and safer first-run Wine startup.
             Includes embedded Winlator/Wine/Box64 runtime. Bring your own legally obtained game files.
