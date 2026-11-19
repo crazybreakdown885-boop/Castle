@@ -169,7 +169,7 @@ private class BrawlerGame(context: Context) : View(context) {
         if(attack>0f) {
             color(Color.argb((110*attack.coerceAtMost(1f)).toInt(),255,239,172))
             p.style=Paint.Style.STROKE; p.strokeWidth=5f
-            c.drawArc(if(facing>0) heroX+15 else heroX-90,heroY-120,if(facing>0) heroX+115 else heroX+10,heroY-20,if(facing>0) 210f: -30f,110f,false,p); p.style=Paint.Style.FILL
+            c.drawArc(if(facing>0) heroX+15 else heroX-90,heroY-120,if(facing>0) heroX+115 else heroX+10,heroY-20,if (facing > 0) 210f else -30f,110f,false,p); p.style=Paint.Style.FILL
         }
     }
 
