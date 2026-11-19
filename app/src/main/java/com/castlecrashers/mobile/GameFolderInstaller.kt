@@ -56,6 +56,7 @@ object GameFolderInstaller {
             val exe = staging.walkTopDown().firstOrNull { it.isFile && it.name.equals("castle.exe", true) }
                 ?: throw IllegalStateException("Castle.exe não foi encontrado na pasta importada.")
             val pe = PeExecutableInspector.inspect(exe)
+            validateGameFiles(exe)
             require(pe.machine == 0x014C && pe.bits == 32) {
                 "O Castle.exe selecionado é ${pe.architecture}/${pe.bits}-bit; esta versão está preparada para validar o Castle Crashers x86."
             }
@@ -153,6 +154,19 @@ object GameFolderInstaller {
             staging.deleteRecursively()
             if (!destination.exists() && backup.exists()) backup.renameTo(destination)
             throw error
+        }
+    }
+
+    private fun validateGameFiles(exe: File) {
+        val gameDir = exe.parentFile ?: throw IllegalStateException("Pasta do Castle.exe inválida.")
+        require(File(gameDir, "data").isDirectory) {
+            "A pasta data do Castle Crashers não foi encontrada ao lado do Castle.exe."
+        }
+        require(File(gameDir, "D3DX9_43.dll").isFile) {
+            "D3DX9_43.dll não foi encontrado. Importe a pasta completa do jogo."
+        }
+        require(File(gameDir, "steam_api.dll").isFile) {
+            "steam_api.dll não foi encontrado. Esta cópia do Castle Crashers está incompleta."
         }
     }
 
