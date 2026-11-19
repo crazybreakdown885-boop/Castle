@@ -52,9 +52,12 @@ Implemented in branch `v0.3.0`:
 - Configured Winlator's built-in `Virtual Gamepad` profile (profile 3) to appear automatically when touchscreen controls are enabled. The upstream `GamepadHandler` has four gamepad slots and auto-assigns connected external controllers when no manual player assignment overrides it.
 - Added PE header inspection and transactional game import.
 
-Still awaiting confirmation:
-- A successful CI build of the merged app module and native CMake targets.
-- First launch, Wine prefix creation, D3D9 rendering, sound and controller behavior on the Moto G7 Play.
+Confirmed by CI:
+- The merged app module and native CMake targets compile successfully.
+- GitHub Actions run `44598212504` produced a 160,824,665-byte debug APK and passed checks for the embedded rootfs, Box64, zstd JNI, audio, touch profile and native graphics libraries.
+
+Still awaiting device validation:
+- First launch, Wine prefix creation, D3D9 rendering, sound and controller behavior on the Moto G7 Play. The user will perform this test.
 
 Not implemented:
 - Castle Crashers LAN gameplay transport or Steamworks multiplayer. Local room discovery is not a gameplay network implementation.
