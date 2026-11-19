@@ -380,29 +380,39 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
     }
 
     private fun settings() {
-        val panel = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(8)) }
-        panel.addView(text("Resolução do perfil do jogo", 14f))
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(14), dp(18), dp(14))
+            setBackgroundColor(0xff211d27.toInt())
+        }
+        panel.addView(text("CASTLE CRASHERS  •  OPTIONS", 17f, 0xffffd98b.toInt()).apply {
+            typeface = android.graphics.Typeface.create("serif", android.graphics.Typeface.BOLD)
+            letterSpacing = 0.04f
+        })
+        panel.addView(text("Ajuste o equipamento e o desempenho do seu cavaleiro.", 11f, 0xffd6c7ae.toInt()))
+        panel.addView(gap(8))
+        panel.addView(text("Resolução do perfil do jogo", 14f, 0xffffd98b.toInt()))
         val values = arrayOf("Automática (854 × 480)", "1280 × 720", "960 × 540", "854 × 480", "640 × 360")
         val resolution = Spinner(this).apply {
             adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, values)
             setSelection(prefs.getInt("resolution", 0))
         }
         panel.addView(resolution)
-        panel.addView(text("Renderizador Direct3D 9", 14f))
+        panel.addView(text("Renderizador Direct3D 9", 14f, 0xffffd98b.toInt()))
         val renderers = arrayOf("Automático (ajustado ao aparelho)", "DXVK (Vulkan • desempenho)", "WineD3D (OpenGL • compatibilidade)")
         val renderer = Spinner(this).apply {
             adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, renderers)
             setSelection(prefs.getInt("renderer", 0))
         }
         panel.addView(renderer)
-        panel.addView(text("Perfil Box64", 14f))
+        panel.addView(text("Perfil Box64", 14f, 0xffffd98b.toInt()))
         val box64Presets = arrayOf("Automático (por aparelho)", "Performance", "Intermediate", "Stability")
         val box64Preset = Spinner(this).apply {
             adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, box64Presets)
             setSelection(prefs.getInt("box64_preset", 0))
         }
         panel.addView(box64Preset)
-        panel.addView(text("Driver gráfico", 14f))
+        panel.addView(text("Driver gráfico", 14f, 0xffffd98b.toInt()))
         val graphicsDrivers = arrayOf(
             "Automático (recomendado)",
             "Turnip + Gladio",
@@ -416,34 +426,59 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             setSelection(prefs.getInt("graphics_driver", 0))
         }
         panel.addView(graphicsDriver)
-        panel.addView(text("Motor de áudio", 14f))
+        panel.addView(text("Motor de áudio", 14f, 0xffffd98b.toInt()))
         val audioDrivers = arrayOf("PulseAudio (recomendado)", "ALSA (alternativo)")
         val audioDriver = Spinner(this).apply {
             adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, audioDrivers)
             setSelection(prefs.getInt("audio_driver", 0))
         }
         panel.addView(audioDriver)
-        panel.addView(text("Volume do jogo", 14f))
-        val volume = SeekBar(this).apply { max = 100; progress = prefs.getInt("volume", 80) }
+        panel.addView(text("Volume do jogo", 14f, 0xffffd98b.toInt()))
+        val volume = SeekBar(this).apply {
+            max = 100
+            progress = prefs.getInt("volume", 80)
+            progressTintList = android.content.res.ColorStateList.valueOf(0xffc79b56.toInt())
+            thumbTintList = android.content.res.ColorStateList.valueOf(0xffffd98b.toInt())
+        }
         panel.addView(volume)
-        val touch = CheckBox(this).apply { text = "Mostrar controle touch Xbox"; isChecked = prefs.getBoolean("touch", true) }
+        val touch = CheckBox(this).apply {
+            text = "Mostrar controle touch Xbox"
+            isChecked = prefs.getBoolean("touch", true)
+            setTextColor(0xffeee2cc.toInt())
+            buttonTintList = android.content.res.ColorStateList.valueOf(0xffc79b56.toInt())
+        }
         panel.addView(touch)
         val performanceHud = CheckBox(this).apply {
             text = "Exibir FPS, CPU e RAM durante o jogo"
             isChecked = prefs.getBoolean("performance_hud", true)
+            setTextColor(0xffeee2cc.toInt())
+            buttonTintList = android.content.res.ColorStateList.valueOf(0xffc79b56.toInt())
         }
         panel.addView(performanceHud)
-        panel.addView(text("USB/Bluetooth: detecção e atribuição automática de até 4 controles pelo runtime.", 12f, 0xffaab2c5.toInt()))
-        val scroll = ScrollView(this).apply { addView(panel) }
-        AlertDialog.Builder(this).setTitle("Configurações").setView(scroll)
-            .setPositiveButton("Salvar") { _, _ ->
+        panel.addView(text("USB/Bluetooth: detecção e atribuição automática de até 4 controles pelo runtime.", 12f, 0xffc8bba5.toInt()))
+        val scroll = ScrollView(this).apply {
+            setBackgroundColor(0xff211d27.toInt())
+            addView(panel)
+        }
+        val dialog = AlertDialog.Builder(this).setTitle("HELP & OPTIONS").setView(scroll)
+            .setPositiveButton("SALVAR") { _, _ ->
                 prefs.edit().putInt("resolution", resolution.selectedItemPosition).putInt("renderer", renderer.selectedItemPosition)
                     .putInt("graphics_driver", graphicsDriver.selectedItemPosition).putInt("volume", volume.progress)
                     .putInt("box64_preset", box64Preset.selectedItemPosition)
                     .putInt("audio_driver", audioDriver.selectedItemPosition)
                     .putBoolean("touch", touch.isChecked).putBoolean("performance_hud", performanceHud.isChecked).apply()
                 status.text = "Configurações salvas e aplicadas na próxima inicialização do jogo."
-            }.setNegativeButton("Cancelar", null).show()
+            }.setNegativeButton("VOLTAR", null).create()
+        dialog.setOnShowListener {
+            dialog.window?.setBackgroundDrawable(android.graphics.drawable.GradientDrawable().apply {
+                setColor(0xff211d27.toInt())
+                cornerRadius = dp(8).toFloat()
+                setStroke(dp(2), 0xffa9814b.toInt())
+            })
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE)?.setTextColor(0xffffd98b.toInt())
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.setTextColor(0xffd5c4a4.toInt())
+        }
+        dialog.show()
     }
 
     private fun touchInfo() {
