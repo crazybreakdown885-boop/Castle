@@ -8,7 +8,7 @@ Upstream repositories:
 - `brunodev85/winlator` (LGPL-2.1 project)
 - `brunodev85/winlator-app` (Android application source)
 
-The source was inspected for the current `main` branch. This document is an integration map, not a claim that the engine has already been vendored or built into Castle Mobile.
+The source was inspected for the current `main` branch. This document records the pinned engine source and the current single-APK integration. A successful build and device launch still need to be confirmed.
 
 ## What the upstream engine actually does
 
@@ -45,15 +45,18 @@ The first graphics candidate is the upstream Wine D3D9 path; DXVK should be an o
 ## Current Castle Mobile status
 
 Implemented in branch `v0.3.0`:
-- SAF import of the selected game directory into app-private storage.
-- Transactional import: the previous copy is preserved until the new copy is validated.
-- PE header inspection of `castle.exe`, including machine and PE32/PE32+ checks.
-- CI unit tests for valid x86 PE32, invalid machine/optional-header combinations and non-PE files.
-- A clear launch gate that reports missing runtime pieces instead of pretending the Windows executable was started.
+- Pinned `brunodev85/winlator-app` as a Git submodule at commit `ecd5ab2980de79eb955621cef26a3b4672013875`.
+- Merged Winlator Java sources, resources, assets, JNI libraries and CMake targets into the Castle application module so the runtime is intended to ship inside one APK, not as a second installed app.
+- Added a runtime bridge that installs the Winlator rootfs, creates a Wine container, copies the imported game into `C:\\CastleCrashers` and opens `XServerDisplayActivity` with `castle.exe`.
+- Added runtime configuration for resolution, PulseAudio volume and a selectable DXVK/WineD3D path.
+- Configured Winlator's built-in `Virtual Gamepad` profile (profile 3) to appear automatically when touchscreen controls are enabled. The upstream `GamepadHandler` has four gamepad slots and auto-assigns connected external controllers when no manual player assignment overrides it.
+- Added PE header inspection and transactional game import.
 
-Not implemented yet:
-- Winlator engine integration, Wine prefix, X server and renderer in the Castle APK.
-- Real game launch, XInput bridge, multi-player assignment, applied audio/video settings.
-- LAN gameplay protocol or Steamworks multiplayer.
+Still awaiting confirmation:
+- A successful CI build of the merged app module and native CMake targets.
+- First launch, Wine prefix creation, D3D9 rendering, sound and controller behavior on the Moto G7 Play.
 
-The debug APK artifact produced by CI is not a playable Castle Crashers port until those missing engine and input pieces are integrated.
+Not implemented:
+- Castle Crashers LAN gameplay transport or Steamworks multiplayer. Local room discovery is not a gameplay network implementation.
+
+Do not treat the APK as playable until CI produces the merged APK and the game starts on the device.
