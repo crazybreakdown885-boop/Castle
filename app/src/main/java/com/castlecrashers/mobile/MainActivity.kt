@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         top.addView(brand, LinearLayout.LayoutParams(dp(42), dp(44)))
         val brandText = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         brandText.addView(text("CASTLE CRASHERS", 16f, 0xffffe8bd.toInt()))
-        brandText.addView(text("MOBILE  •  VERSÃO 0.3.2", 10f, 0xff9ca9bd.toInt()))
+        brandText.addView(text("MOBILE  •  VERSÃO 1.0.0", 10f, 0xff9ca9bd.toInt()))
         top.addView(brandText)
         page.addView(top)
         page.addView(gap(18))
@@ -81,9 +81,12 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             }
         }
         val artwork = ImageView(this).apply {
-            setImageBitmap(assets.open("castle_hero.webp").use { BitmapFactory.decodeStream(it) })
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            contentDescription = "Cavaleiros diante do castelo"
+            // Banner art will be supplied as a licensed fan/official image; do not generate replacement artwork.
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                intArrayOf(0xff52617b.toInt(), 0xff25334b.toInt(), 0xff111827.toInt())
+            ).apply { cornerRadius = dp(14).toFloat() }
+            contentDescription = "Banner Castle Crashers"
         }
         hero.addView(artwork, LinearLayout.LayoutParams(-1, dp(188)))
         hero.addView(gap(12))
