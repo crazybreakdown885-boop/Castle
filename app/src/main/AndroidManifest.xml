@@ -15,7 +15,7 @@
 
     <application
         android:theme="@style/AppThemeDark"
-        android:label="Castle Crashers Mobile"
+        android:label="Castle Crashers V1"
         android:icon="@drawable/ic_castle_mobile"
         android:roundIcon="@drawable/ic_castle_mobile"
         android:allowBackup="false"
