@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: castle-v1-\${{ github.ref }}
+  group: castle-v1-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
