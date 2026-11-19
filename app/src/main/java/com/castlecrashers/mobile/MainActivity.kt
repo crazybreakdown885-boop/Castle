@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         page.addView(hero)
         page.addView(gap(16))
 
-        page.addView(button("⚔   JOGAR", "Iniciar Castle Crashers no runtime integrado", { startGame() }, true))
+        page.addView(button("⚔   JOGAR", "Iniciar Castle Crashers no runtime integrado", primary = true) { startGame() })
         page.addView(button("＋   IMPORTAR JOGO", "Selecionar a pasta com Castle.exe, DLLs e arquivos do jogo") { chooseFolder() })
         page.addView(button("▣   VERIFICAR ARQUIVOS", "Conferir se a cópia do jogo está completa") { inspectGame() })
         page.addView(button("⌕   DIAGNÓSTICO", "Verificar arquitetura do executável e estado do runtime") { diagnoseGame() })
@@ -144,7 +144,7 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         layoutParams = LinearLayout.LayoutParams(1, dp(n))
     }
 
-    private fun button(title: String, sub: String, action: () -> Unit, primary: Boolean = false): View {
+    private fun button(title: String, sub: String, primary: Boolean = false, action: () -> Unit): View {
         val box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = android.view.Gravity.CENTER_VERTICAL
