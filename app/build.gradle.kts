@@ -54,7 +54,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.4.0")
     implementation("androidx.preference:preference:1.2.1")
     implementation("com.google.android.material:material:1.4.0")
-    implementation("com.github.luben:zstd-jni:1.5.2-3@aar")
+    implementation("com.github.luben:zstd-jni:1.5.2-3")
     implementation("org.tukaani:xz:1.12")
     implementation("org.apache.commons:commons-compress:1.28.0")
     implementation("androidx.lifecycle:lifecycle-process:2.5.1")
