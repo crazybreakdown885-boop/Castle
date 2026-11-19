@@ -117,11 +117,12 @@ object GameFolderInstaller {
                                 val count = zip.read(buffer)
                                 if (count < 0) break
                                 bytes += count
-                                require(bytes <= 4L * 1024L * 1024L * 1024L) { "O conteúdo descompactado excede o limite de segurança de 4 GB." }
+                                require(bytes <= 1024L * 1024L * 1024L) { "O conteúdo descompactado excede o limite de segurança de 1 GB." }
                                 output.write(buffer, 0, count)
                             }
                         }
                         files++
+                        require(files <= 20000) { "O ZIP contém mais de 20.000 arquivos." }
                         if (files % 40 == 0) progress("Extraídos $files arquivos • ${bytes / (1024 * 1024)} MB")
                     }
                     zip.closeEntry()
