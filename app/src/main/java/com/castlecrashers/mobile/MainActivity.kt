@@ -61,7 +61,8 @@ class MainActivity : Activity(), InputManager.InputDeviceListener {
         page.addView(button("SELECIONAR PASTA DO JOGO", "Importar a pasta por seletor Android") { chooseFolder() })
         page.addView(button("IMPORTAR JOGO PARA O APP", "Copiar EXE, DLLs e toda a pasta data para armazenamento interno") { gameFolder?.let { importGame(Uri.parse(it)) } ?: chooseFolder() })
         page.addView(button("VERIFICAR ARQUIVOS", "Verificar a cópia completa do jogo") { inspectGame() })
-        page.addView(button("VERIFICAR EXECUÇÃO DO EXE", "Checar Castle.exe e disponibilidade do runtime") { startGame() })
+        page.addView(button("DIAGNÓSTICO DO JOGO", "Ler cabeçalho PE e arquitetura real do executável") { diagnoseGame() })
+        page.addView(button("INICIAR JOGO", "Verificar runtime Windows integrado") { startGame() })
         page.addView(gap(16))
         page.addView(text("CONTROLES", 19f, 0xffffd58a.toInt()))
         devices = text("Detectando controles USB e Bluetooth…")
@@ -124,10 +125,12 @@ class MainActivity : Activity(), InputManager.InputDeviceListener {
                 }
                 prefs.edit().putString("game_install_path", result.root.absolutePath).apply()
                 runOnUiThread {
-                    status.text = "Jogo importado: " + result.filesCopied + " arquivos • Castle.exe localizado."
+                    val pe = PeExecutableInspector.inspect(result.exe)
+                    status.text = "Jogo importado: " + result.filesCopied + " arquivos • PE " + pe.architecture + "/" + pe.bits + "-bit."
                     AlertDialog.Builder(this).setTitle("Importação concluída")
                         .setMessage("Castle.exe foi encontrado em:\n" + result.exe.absolutePath +
-                            "\n\nArquivos: " + result.filesCopied +
+                            "\n\nArquitetura: " + pe.architecture + " / " + pe.bits + "-bit" +
+                            "\nArquivos: " + result.filesCopied +
                             "\nTamanho: " + (result.bytesCopied / (1024 * 1024)) + " MB")
                         .setPositiveButton("OK", null).show()
                 }
@@ -146,7 +149,8 @@ class MainActivity : Activity(), InputManager.InputDeviceListener {
         val installed = prefs.getString("game_install_path", null)?.let { File(it) }
         val installedExe = installed?.walkTopDown()?.firstOrNull { it.isFile && it.name.equals("castle.exe", true) }
         if (installedExe != null) {
-            status.text = "Cópia completa validada • " + installedExe.absolutePath + " • runtime Windows ainda pendente."
+            val pe = PeExecutableInspector.inspect(installedExe)
+            status.text = "Cópia validada • PE " + pe.architecture + "/" + pe.bits + "-bit • runtime Windows pendente."
             return
         }
         val uri = gameFolder ?: run { status.text = "Selecione a pasta do jogo primeiro."; return }
@@ -159,6 +163,31 @@ class MainActivity : Activity(), InputManager.InputDeviceListener {
         }
     }
 
+    private fun diagnoseGame() {
+        val installed = prefs.getString("game_install_path", null)?.let { File(it) }
+        val exe = installed?.walkTopDown()?.firstOrNull { it.isFile && it.name.equals("castle.exe", true) }
+        if (exe == null) {
+            status.text = "Importe a pasta completa do jogo antes do diagnóstico."
+            return
+        }
+        try {
+            val pe = PeExecutableInspector.inspect(exe)
+            val abi = android.os.Build.SUPPORTED_ABIS.joinToString(", ")
+            val runtime = File(filesDir, "runtime")
+            val report = "Executável: ${exe.name}\nFormato: PE\nArquitetura: ${pe.architecture} / ${pe.bits}-bit\n" +
+                "Máquina PE: 0x${pe.machine.toString(16)}\nAndroid ABI: $abi\n" +
+                "Runtime local: ${if (runtime.exists()) "pasta encontrada" else "não instalado"}\n\n" +
+                if (pe.machine == 0x014C && pe.bits == 32)
+                    "Alvo confirmado: Windows x86 de 32 bits. Precisa de Wine WoW64 + Box64 e camada gráfica D3D9."
+                else "Este executável não corresponde ao Castle Crashers x86 esperado."
+            AlertDialog.Builder(this).setTitle("Diagnóstico técnico").setMessage(report)
+                .setPositiveButton("OK", null).show()
+            status.text = "Diagnóstico concluído • PE ${pe.architecture}/${pe.bits}-bit."
+        } catch (e: Exception) {
+            status.text = "Falha no diagnóstico: ${e.message ?: "arquivo inválido"}"
+        }
+    }
+
     private fun startGame() {
         val installed = prefs.getString("game_install_path", null)?.let { File(it) }
         val exe = installed?.walkTopDown()?.firstOrNull { it.isFile && it.name.equals("castle.exe", true) }
@@ -166,16 +195,28 @@ class MainActivity : Activity(), InputManager.InputDeviceListener {
             status.text = "Importe a pasta completa do jogo antes de iniciar."
             return
         }
-        val runtime = File(filesDir, "runtime")
-        val box64 = File(runtime, "bin/box64")
-        val wine = File(runtime, "wine/bin/wine")
-        if (!box64.exists() || !wine.exists()) {
-            AlertDialog.Builder(this).setTitle("Runtime Windows ainda não integrado")
-                .setMessage("A cópia completa do jogo está pronta em:\n" + installed!!.absolutePath +
-                    "\n\nO executável fornecido é Windows x86 de 32 bits. Esta compilação ainda não contém um runtime Wine/WoW64 + tradução ARM64 validado, então o jogo ainda não pode iniciar.")
-                .setPositiveButton("OK", null).show()
-            status.text = "Arquivos do jogo prontos; aguardando runtime Windows x86 em ARM64."
+        val pe = try { PeExecutableInspector.inspect(exe) } catch (e: Exception) {
+            status.text = "Executável inválido: ${e.message}"
+            return
         }
+        val runtime = File(filesDir, "runtime")
+        val required = listOf(
+            File(runtime, "bin/box64"),
+            File(runtime, "rootfs"),
+            File(runtime, "launch-castle.sh")
+        )
+        val missing = required.filterNot { it.exists() }
+        if (missing.isNotEmpty()) {
+            AlertDialog.Builder(this).setTitle("Runtime ainda não integrado")
+                .setMessage("Castle.exe foi validado como PE ${pe.architecture}/${pe.bits}-bit.\n\n" +
+                    "Faltam componentes do runtime integrado:\n" +
+                    missing.joinToString("\n") { it.relativeTo(filesDir).path } +
+                    "\n\nNão vou fingir que o EXE foi iniciado: o pacote Wine WoW64/Box64, rootfs e inicializador ainda precisam ser incorporados ao APK.")
+                .setPositiveButton("OK", null).show()
+            status.text = "Jogo importado e validado; runtime Windows ainda ausente."
+            return
+        }
+        status.text = "Runtime encontrado, mas o bootstrap gráfico ainda precisa ser conectado ao servidor X/entrada Android."
     }
 
     private fun refreshControllers() {
