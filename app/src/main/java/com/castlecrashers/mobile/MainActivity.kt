@@ -284,7 +284,8 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         val touch = CheckBox(this).apply { text = "Mostrar controle touch"; isChecked = prefs.getBoolean("touch", true) }
         panel.addView(touch)
         panel.addView(text("USB/Bluetooth: detecção e atribuição automática de até 4 controles pelo runtime.", 12f, 0xffaab2c5.toInt()))
-        AlertDialog.Builder(this).setTitle("Configurações").setView(panel)
+        val scroll = ScrollView(this).apply { addView(panel) }
+        AlertDialog.Builder(this).setTitle("Configurações").setView(scroll)
             .setPositiveButton("Salvar") { _, _ ->
                 prefs.edit().putInt("resolution", resolution.selectedItemPosition).putInt("renderer", renderer.selectedItemPosition)
                     .putInt("graphics_driver", graphicsDriver.selectedItemPosition).putInt("volume", volume.progress)
