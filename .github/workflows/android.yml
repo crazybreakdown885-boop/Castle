@@ -95,8 +95,8 @@ jobs:
 
       - name: Verify isolated Android package and provider identity
         run: |
-          grep -q "com.crazybreakdown.castlecrashers.mobile.FileProvider" app/src/main/AndroidManifest.xml
-          grep -q "com.crazybreakdown.castlecrashers.mobile.FileProvider" vendor/winlator-app/app/src/main/java/com/winlator/core/FileUtils.java
+          grep -q "com.crazybreakdown.castlecrashers.mobile.v101.FileProvider" app/src/main/AndroidManifest.xml
+          grep -q "com.crazybreakdown.castlecrashers.mobile.v101.FileProvider" vendor/winlator-app/app/src/main/java/com/winlator/core/FileUtils.java
 
       - name: Add system CPU utilization to the Winlator performance HUD
         run: |
@@ -208,7 +208,7 @@ jobs:
           grep -q "lib/arm64-v8a/libmidihandler.so" apk-contents.txt
           AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -n1)"
           test -x "$AAPT"
-          "$AAPT" dump badging "$APK" | grep -q "package: name='com.crazybreakdown.castlecrashers.mobile' versionCode='9' versionName='1.0.1'"
+          "$AAPT" dump badging "$APK" | grep -q "package: name='com.crazybreakdown.castlecrashers.mobile.v101' versionCode='9' versionName='1.0.1'"
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n1)"
           test -x "$APKSIGNER"
           "$APKSIGNER" verify --verbose "$APK"
@@ -222,7 +222,7 @@ jobs:
         with:
           name: Castle-Crashers-v1.0.1-ARM64
           path: |
-            release/Castle-Crashers-v1.0.0-arm64.apk
+            release/Castle-Crashers-v1.0.1-arm64.apk
             release/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 30
@@ -237,7 +237,7 @@ jobs:
           make_latest: true
           overwrite_files: true
           files: |
-            release/Castle-Crashers-v1.0.0-arm64.apk
+            release/Castle-Crashers-v1.0.1-arm64.apk
             release/SHA256SUMS.txt
           fail_on_unmatched_files: true
           body: |
