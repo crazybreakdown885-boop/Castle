@@ -122,23 +122,19 @@ jobs:
           if "castle_rootfs_install_state" not in s:
               if anchor not in s: raise SystemExit("RootFS state init patch point missing")
               s = s.replace(anchor, state_init, 1)
-          old_state = """
-            if (success) {
-                rootFS.createRFSVersionFile(LATEST_VERSION);
-                resetContainerRFSVersions(activity);
-            }
-            else AppUtils.showToast(activity, R.string.unable_to_install_system_files);
-          """
-          new_state = """
-            if (success) {
-                rootFS.createRFSVersionFile(LATEST_VERSION);
-                resetContainerRFSVersions(activity);
-            }
-            else AppUtils.showToast(activity, R.string.unable_to_install_system_files);
-            try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
-                out.write((success ? "ready" : "failed").getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            } catch (Exception ignored) {}
-          """
+          old_state = """            if (success) {
+                          rootFS.createRFSVersionFile(LATEST_VERSION);
+                          resetContainerRFSVersions(activity);
+                      }
+                      else AppUtils.showToast(activity, R.string.unable_to_install_system_files);"""
+          new_state = """            if (success) {
+                          rootFS.createRFSVersionFile(LATEST_VERSION);
+                          resetContainerRFSVersions(activity);
+                      }
+                      else AppUtils.showToast(activity, R.string.unable_to_install_system_files);
+                      try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
+                          out.write((success ? "ready" : "failed").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                      } catch (Exception ignored) {}"""
           if 'out.write((success ? "ready" : "failed")' not in s:
               if old_state not in s: raise SystemExit("RootFS state completion patch point missing")
               s = s.replace(old_state, new_state, 1)
