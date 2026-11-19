@@ -12,7 +12,7 @@ Port Android baseado no runtime Winlator integrado ao próprio APK. O aplicativo
 - HUD integrado de FPS, uso de CPU e RAM, ativado por padrão.
 - Controles virtuais Xbox e suporte do runtime a controles externos, teclado e mouse.
 - Descoberta de salas LAN experimental.
-- Identidade Android separada da versão de teste anterior para evitar conflito com assinaturas antigas.
+- Identidade de pacote e autoridade FileProvider próprias, para coexistir com o Winlator instalado e evitar conflitos de instalação.
 
 O APK não inclui Castle.exe nem arquivos comerciais do jogo. Importe uma cópia do jogo que você tenha direito de usar. O arquivo ZIP fornecido para análise não será redistribuído no APK ou no repositório.
 
