@@ -173,13 +173,23 @@ jobs:
           path: ~/.android/debug.keystore
           key: castle-android-debug-signing-v1
 
+      - name: Ensure stable Android signing key exists
+        run: |
+          mkdir -p ~/.android
+          if [ ! -f ~/.android/debug.keystore ]; then
+            keytool -genkeypair -v -storetype JKS -keystore ~/.android/debug.keystore \\
+              -storepass android -alias androiddebugkey -keypass android \\
+              -keyalg RSA -keysize 2048 -validity 10000 \\
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
       - name: Build integrated Android APK
-        run: gradle --no-daemon :app:assembleDebug
+        run: gradle --no-daemon :app:assembleRelease
 
       - name: Verify embedded runtime and APK signature
         run: |
           set -euo pipefail
-          APK=app/build/outputs/apk/debug/app-debug.apk
+          APK=app/build/outputs/apk/release/app-release.apk
           test -s "$APK"
           test "$(stat -c%s "$APK")" -gt 100000000
           unzip -l "$APK" > apk-contents.txt
