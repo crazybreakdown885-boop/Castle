@@ -9,6 +9,7 @@ import android.os.SystemClock
 import com.winlator.XServerDisplayActivity
 import com.winlator.container.Container
 import com.winlator.container.ContainerManager
+import com.winlator.box64.Box64Preset
 import com.winlator.container.AudioDrivers
 import com.winlator.container.DXWrappers
 import com.winlator.container.GraphicsDrivers
@@ -182,12 +183,26 @@ object WinlatorRuntimeBridge {
             }
         }
         container.setDXWrapper(dxWrapper)
+        val box64Preset = when (prefs.getInt("box64_preset", 0)) {
+            1 -> Box64Preset.PERFORMANCE
+            2 -> Box64Preset.INTERMEDIATE
+            3 -> Box64Preset.STABILITY
+            else -> if (memoryForProfile(activity) <= 3L * 1024L * 1024L * 1024L)
+                Box64Preset.INTERMEDIATE else Box64Preset.PERFORMANCE
+        }
+        container.setBox64Preset(box64Preset)
         container.setHUDMode(
             if (prefs.getBoolean("performance_hud", true))
                 com.winlator.widget.FrameRating.Mode.FULL.ordinal().toByte()
             else com.winlator.widget.FrameRating.Mode.DISABLED.ordinal().toByte()
         )
         container.saveData()
+    }
+
+    private fun memoryForProfile(activity: AppCompatActivity): Long {
+        val memory = ActivityManager.MemoryInfo()
+        (activity.getSystemService(android.content.Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(memory)
+        return memory.totalMem
     }
 
     private fun copyTree(source: File, destination: File) {
