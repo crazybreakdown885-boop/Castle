@@ -1,51 +1,46 @@
-# Castle Mobile 0.3.0 — runtime integration notes
+# Castle Mobile 0.3.0 — runtime integration status
 
-## Verified inputs (2026-11-19)
+## Confirmed source inputs
 
-### Game archive supplied in this conversation
-- Archive: `CastleCrashers Opti.zip`
-- 713 ZIP entries total (702 files), including 664 files under `data` and 34 entries under `steam_settings`.
-- Main executable: `castle.exe` (1,943,552 bytes).
-- Adjacent Windows modules include `D3DX9_43.dll`, `dinput8.dll`, `steam_api.dll`, and `optiprojects.asi`.
-- PE COFF machine for `castle.exe` and the listed DLLs: `0x014c` (IMAGE_FILE_MACHINE_I386); PE optional-header magic: `0x010b` (PE32). This is a 32-bit Windows x86 program, not an x86-64 Windows program.
-- The game archive must remain user-provided. Do not commit or publish its EXE, DLLs, data, or Steam files.
+### User-supplied game archive
+- `CastleCrashers Opti.zip` contains the Windows `castle.exe` and its game data.
+- `castle.exe` is PE32 x86: COFF machine `0x014c`, optional-header magic `0x010b`.
+- The game archive remains user-provided. Its EXE, DLLs, data and Steam configuration are not committed to the repository or bundled in the APK.
 
-### Winlator APK supplied in this conversation
-- APK: `Winlator_11.2.apk`
-- Android native ABI observed: `arm64-v8a`.
-- Bundled asset `assets/box64/box64-0.4.4.tzst`.
-- Bundled `assets/rootfs.tzst` contains `/opt/wine/bin/wine`, `/opt/wine/bin/wineserver`, `/opt/wine/lib/wine/x86_64-unix/ntdll.so`, and extensive `/opt/wine/lib/wine/i386-windows/` built-ins, including `winexinput.sys`.
-- Rootfs also contains the PulseAudio runtime and the APK contains Turnip, VirGL, Zink and Vortek driver assets.
-- The supplied APK does not expose a standalone `libbox86.so`; its apparent 32-bit Windows path is therefore based on its x86_64 Wine/Box64 WoW64 arrangement, which must be confirmed from the exact upstream source and runtime configuration before reuse.
-- Do not repackage the supplied APK's proprietary/third-party binary assets blindly. Integrate from source/build outputs with the required notices, source offers and license compliance.
+### Upstream Windows compatibility engine
+- The project pins `brunodev85/winlator-app` as a Git submodule at `ecd5ab2980de79eb955621cef26a3b4672013875`.
+- The APK builds the upstream Java sources, resources, assets, JNI libraries and native CMake targets into the Castle application module. It is intended to install as one APK, not as a second Winlator app.
+- The build uses the upstream ARM64 rootfs, Box64 bundle, Wine WoW64 components, graphics backends and audio runtime. The zstd Android AAR supplies its ARM64 JNI library.
 
-## Implementation decision
+## What 0.3.0 now implements
 
-The game is PE32 x86. The first runtime candidate is an ARM64 Android host running an x86_64 Wine WoW64 build under Box64 with 32-bit Windows support enabled, plus a D3D9 translation path. This is not the same as executing an x86 Linux binary directly and is not solved by Box64 alone. Validate the exact Wine build, Box64 compile options, WoW64 prefix architecture and 32-bit D3D9 libraries before enabling the launch button.
+- SAF import of the complete selected game folder into app-private storage.
+- Transactional import: the old game copy is preserved until the new copy has been copied and validated.
+- PE inspection rejects an invalid executable and identifies the expected Windows x86/32-bit target.
+- Runtime bootstrap through Winlator's rootfs installer.
+- Wine container creation and persistence.
+- Copying the imported game into the container's `C:\\CastleCrashers` directory.
+- Launching the executable through Winlator's `XServerDisplayActivity`, not through a fake button or a bare `ProcessBuilder`.
+- Settings passed to the Wine container: resolution, PulseAudio volume, DXVK/WineD3D and Vulkan/OpenGL driver pair.
+- Touch controls use Winlator's built-in `Virtual Gamepad` profile (profile 3), enabled by the Castle touch setting.
+- Upstream `GamepadHandler` provides four gamepad slots and automatic external-controller assignment when manual slot bindings are not configured. The engine also handles keyboard and mouse input.
 
-## Work completed in this branch
+## CI build and package verification
 
-- Added `GameFolderInstaller`: recursively copies the complete SAF-selected game folder to app-private storage, preserving subdirectories and reporting progress.
-- The launcher now searches the imported private copy for `castle.exe` and explicitly reports that runtime execution remains unavailable until the Wine/WoW64/Box64 stack is integrated.
-- No game binaries from the user archive are committed.
+GitHub Actions run **44598212504** completed successfully on commit `9d59dad4126b6517207a0e744a26dc0e817b9c0f`.
 
-## Remaining engineering gates
+- Artifact: `CastleMobile-0.3.0-debug`
+- APK artifact size: 160,824,665 bytes
+- CI also checked that the APK contains the rootfs, container pattern, Box64, PulseAudio, virtual gamepad profile, zstd JNI library and Winlator/Vortek/Gladio/VirGL/MIDI native libraries.
 
-1. Build a reproducible, license-compliant ARM64 runtime bundle (Wine WoW64 + Box64 with the required 32-bit Windows support + libc/runtime dependencies).
-2. Add the Android native process/bootstrap layer, Wine prefix creation, environment setup, and safe process lifecycle/log capture.
-3. Validate D3D9 rendering on Adreno 506; compare WineD3D and DXVK paths and test the game's supplied D3DX9 module.
-4. Connect Android touch and physical input to a real virtual XInput/DirectInput device inside the Wine environment; support independent player slots.
-5. Apply resolution/audio settings to the runtime rather than only saving preferences.
-6. Implement LAN gameplay transport only if the game exposes a compatible protocol/mod path; service discovery alone is not gameplay networking.
-7. Treat Steamworks as a separate compatibility and legal/technical investigation. A local `steam_api.dll` or `steam_settings` folder does not prove Steam P2P compatibility.
-8. Run install, launch, gameplay, audio, graphics, controller, multi-controller and network tests on the actual Moto G7 Play/custom ROM. CI compilation is not device validation.
+This confirms the Android project compiles and the required runtime payload is embedded in the APK. It does **not** prove that Castle Crashers launches or runs smoothly on the Moto G7 Play; that device test is intentionally left to the user.
 
-## Five review passes required before calling the port functional
+## Multiplayer boundary
 
-- Pass 1 — APK build, install, app-private storage and permissions.
-- Pass 2 — runtime extraction, ELF dependencies, executable permissions, Wine prefix and clean shutdown.
-- Pass 3 — Castle Crashers startup, D3D9 renderer, frame pacing, audio and stability.
-- Pass 4 — touchscreen mapping, keyboard/mouse, hot-plug and independent controller/player assignment.
-- Pass 5 — LAN gameplay, Steamworks findings, regression and real-device performance.
+- Local co-op input on one phone is supported through the game's local controller support and Winlator's four XInput slots.
+- LAN service discovery is only a discovery test. It does not synchronize game state or create a LAN game.
+- Steam friends, matchmaking, invites and Steamworks networking are not implemented. A `steam_api.dll` or `steam_settings` directory does not establish official Steam connectivity.
 
-A pass is only marked complete when test output or reproducible device evidence exists.
+## Device validation still needed
+
+The user will perform the device test. The main things to observe are first-run rootfs extraction/storage, Wine prefix creation, game startup, D3D9 renderer choice, audio, touchscreen controls, hot-plugged controllers and performance. The Moto G7 Play's Adreno 506 may need WineD3D or a different graphics-driver selection if the default Vulkan path is unstable.
