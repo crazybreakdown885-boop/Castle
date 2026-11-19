@@ -53,3 +53,5 @@ As pull requests verificam o mesmo runtime ARM64, tamanho do APK, bibliotecas na
 
 
 Android package-conflict fix build: version 1.0.1 uses an isolated application ID and persistent signing identity.
+
+Build trigger for Castle Android package-conflict fix.
