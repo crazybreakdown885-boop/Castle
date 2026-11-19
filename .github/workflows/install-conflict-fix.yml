@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: castle-android-101
+  group: castle-android-102-menu-performance
   cancel-in-progress: true
 
 jobs:
