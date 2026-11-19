@@ -64,7 +64,7 @@ jobs:
           grep -q "lib/arm64-v8a/libvortekrenderer.so" apk-contents.txt
           grep -q "lib/arm64-v8a/libgladiorenderer.so" apk-contents.txt
           grep -q "lib/arm64-v8a/libvirglrenderer.so" apk-contents.txt
-          grep -q "lib/arm64-v8a/libmidihandler.so" apk-contents.txt
+          grep -q "lib/arm64-v8a/libmidihandler.so" apk-contents.txt\n          cp "$APK" CastleMobile-0.3.1.apk\n          test -s CastleMobile-0.3.1.apk
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
@@ -72,3 +72,19 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish APK to GitHub Release v0.3.1
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.3.1
+          name: Castle Crashers Mobile v0.3.1
+          target_commitish: ${{ github.sha }}
+          prerelease: false
+          make_latest: true
+          overwrite_files: true
+          files: CastleMobile-0.3.1.apk
+          fail_on_unmatched_files: true
+          body: |
+            Atualização do launcher Castle Crashers Mobile.
+            Novo ícone, interface redesenhada e identificador Android independente para evitar conflito com a instalação anterior.
+            Runtime Windows/Winlator integrado; arquivos do jogo devem ser importados pelo usuário.
