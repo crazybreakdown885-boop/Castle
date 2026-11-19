@@ -72,9 +72,9 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         page.addView(button("TESTAR CONTROLE TOUCH", "Painel virtual estilo Xbox 360") { touchTest() })
         page.addView(gap(16))
         page.addView(text("MULTIPLAYER LOCAL", 19f, 0xffffd58a.toInt()))
-        page.addView(text("Descoberta de salas na mesma rede Wi-Fi.", 13f, 0xffaab2c5.toInt()))
-        page.addView(button("PROCURAR SALAS", "Encontrar amigos na rede local") { discoverRooms() })
-        page.addView(button("ANUNCIAR MINHA SALA", "Disponibilizar serviço local") { advertiseRoom() })
+        page.addView(text("Teste de descoberta na rede Wi-Fi. Ainda não transmite a partida.", 13f, 0xffaab2c5.toInt()))
+        page.addView(button("TESTAR DESCOBERTA LAN", "Procurar anúncios locais; não inicia jogo remoto") { discoverRooms() })
+        page.addView(button("ANUNCIAR SERVIÇO DE TESTE", "Anunciar apenas descoberta local") { advertiseRoom() })
         status = text("0.3.0 • Runtime Windows ainda não incorporado.", 13f, 0xffffbb78.toInt())
         page.addView(gap(12)); page.addView(status)
         page.addView(gap(8))
@@ -305,7 +305,7 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             port = 27888
         }
         nsd.registerService(info, NsdManager.PROTOCOL_DNS_SD, object : NsdManager.RegistrationListener {
-            override fun onServiceRegistered(s: NsdServiceInfo) { runOnUiThread { status.text = "Sala anunciada: " + s.serviceName + ". Ainda falta sincronizar a partida." } }
+            override fun onServiceRegistered(s: NsdServiceInfo) { runOnUiThread { status.text = "Anúncio local ativo: " + s.serviceName + ". É apenas descoberta, sem sincronização do jogo." } }
             override fun onRegistrationFailed(s: NsdServiceInfo, e: Int) { runOnUiThread { status.text = "Falha ao anunciar sala: " + e } }
             override fun onServiceUnregistered(s: NsdServiceInfo) {}
             override fun onUnregistrationFailed(s: NsdServiceInfo, e: Int) {}
@@ -321,7 +321,7 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
                     override fun onResolveFailed(s: NsdServiceInfo, e: Int) {}
                     override fun onServiceResolved(s: NsdServiceInfo) {
                         foundRooms.add(s.serviceName + " • " + s.host.hostAddress + ":" + s.port)
-                        runOnUiThread { status.text = "Salas encontradas:\n" + foundRooms.joinToString("\n") }
+                        runOnUiThread { status.text = "Anúncios encontrados (não são partidas conectadas):\n" + foundRooms.joinToString("\n") }
                     }
                 })
             }
