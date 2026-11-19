@@ -206,6 +206,9 @@ jobs:
           grep -q "lib/arm64-v8a/libgladiorenderer.so" apk-contents.txt
           grep -q "lib/arm64-v8a/libvirglrenderer.so" apk-contents.txt
           grep -q "lib/arm64-v8a/libmidihandler.so" apk-contents.txt
+          AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -n1)"
+          test -x "$AAPT"
+          "$AAPT" dump badging "$APK" | grep -q "package: name='com.crazybreakdown.castlecrashers.mobile' versionCode='8' versionName='1.0.0'"
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n1)"
           test -x "$APKSIGNER"
           "$APKSIGNER" verify --verbose "$APK"
