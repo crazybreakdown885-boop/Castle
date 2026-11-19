@@ -121,7 +121,7 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         page.addView(controllerCard)
         page.addView(gap(8))
         page.addView(button("CONFIGURAÇÕES", "Resolução, áudio, renderizador e controles virtuais") { settings() })
-        page.addView(button("TESTAR CONTROLE TOUCH", "Abrir painel virtual no estilo Xbox") { touchTest() })
+        page.addView(button("CONTROLES DURANTE O JOGO", "Ver como funciona o perfil touch Xbox integrado") { touchInfo() })
 
         page.addView(gap(14))
         page.addView(text("MULTIPLAYER LOCAL", 18f, 0xffffd28a.toInt()))
@@ -388,9 +388,17 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             }.setNegativeButton("Cancelar", null).show()
     }
 
-    private fun touchTest() {
-        val pad = VirtualPad(this) { status.text = "Touch: " + it }
-        AlertDialog.Builder(this).setTitle("Controle virtual Xbox").setView(pad).setPositiveButton("Fechar", null).show()
+    private fun touchInfo() {
+        AlertDialog.Builder(this)
+            .setTitle("Controles touch Xbox")
+            .setMessage(
+                "O perfil virtual é carregado dentro da sessão Winlator ao iniciar o jogo. " +
+                "Ele usa o perfil de controles 3 incluído no runtime, em vez de um desenho de demonstração que não envia comandos ao jogo.\n\n" +
+                "Controles externos USB/OTG e Bluetooth, teclado e mouse são encaminhados pelo Winlator. " +
+                "Você também pode abrir o editor de controles do runtime durante a sessão."
+            )
+            .setPositiveButton("Entendi", null)
+            .show()
     }
 
     private fun advertiseRoom() {
