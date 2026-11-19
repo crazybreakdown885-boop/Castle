@@ -33,6 +33,32 @@ jobs:
           if "public static void install(final AppCompatActivity activity)" not in source:
               raise SystemExit("Winlator RootFSInstaller patch did not apply")
           path.write_text(source)
+
+          display = Path("vendor/winlator-app/app/src/main/java/com/winlator/XServerDisplayActivity.java")
+          source = display.read_text()
+          old = """        if (shortcut != null) {
+            String controlsProfile = shortcut.getExtra("controlsProfile");
+            if (!controlsProfile.isEmpty()) {
+                ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));
+                if (profile != null) showInputControls(profile);
+            }
+        }
+"""
+          new = """        if (shortcut != null) {
+            String controlsProfile = shortcut.getExtra("controlsProfile");
+            if (!controlsProfile.isEmpty()) {
+                ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));
+                if (profile != null) showInputControls(profile);
+            }
+        }
+        else if (getIntent().getBooleanExtra("castle_touch_controls", true)) {
+            ControlsProfile profile = inputControlsManager.getProfile(3);
+            if (profile != null) showInputControls(profile);
+        }
+"""
+          if old not in source:
+              raise SystemExit("Winlator touchscreen profile patch did not apply")
+          display.write_text(source)
           PY
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
