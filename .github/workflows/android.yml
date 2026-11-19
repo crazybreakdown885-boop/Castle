@@ -96,6 +96,68 @@ jobs:
           grep -q "com.crazybreakdown.castlecrashers.mobile.FileProvider" app/src/main/AndroidManifest.xml
           grep -q "com.crazybreakdown.castlecrashers.mobile.FileProvider" vendor/winlator-app/app/src/main/java/com/winlator/core/FileUtils.java
 
+      - name: Add system CPU utilization to the Winlator performance HUD
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          cpu = Path("vendor/winlator-app/app/src/main/java/com/winlator/core/CPUStatus.java")
+          source = cpu.read_text()
+          marker = "    public static String formatClockSpeed"
+          method = """    private static long lastTotalTicks = -1;
+              private static long lastIdleTicks = -1;
+
+              public static synchronized int getUsage() {
+                  try (RandomAccessFile reader = new RandomAccessFile("/proc/stat", "r")) {
+                      String line = reader.readLine();
+                      if (line == null || !line.startsWith("cpu ")) return -1;
+                      String[] fields = line.trim().split("\\\\s+");
+                      if (fields.length < 5) return -1;
+                      long total = 0;
+                      for (int i = 1; i < fields.length && i < 9; i++) total += Long.parseLong(fields[i]);
+                      long idle = Long.parseLong(fields[4]);
+                      if (fields.length > 5) idle += Long.parseLong(fields[5]);
+                      if (lastTotalTicks < 0) {
+                          lastTotalTicks = total;
+                          lastIdleTicks = idle;
+                          return 0;
+                      }
+                      long totalDelta = total - lastTotalTicks;
+                      long idleDelta = idle - lastIdleTicks;
+                      lastTotalTicks = total;
+                      lastIdleTicks = idle;
+                      if (totalDelta <= 0) return -1;
+                      return Math.max(0, Math.min(100, (int)Math.round((totalDelta - idleDelta) * 100.0 / totalDelta)));
+                  }
+                  catch (Exception e) {
+                      return -1;
+                  }
+              }
+
+          """
+          if "public static synchronized int getUsage()" not in source:
+              if marker not in source:
+                  raise SystemExit("CPUStatus insertion point not found")
+              cpu.write_text(source.replace(marker, method + marker, 1))
+
+          rating = Path("vendor/winlator-app/app/src/main/java/com/winlator/widget/FrameRating.java")
+          source = rating.read_text()
+          source = source.replace("import com.winlator.box64.Box64Utils;\\n", "")
+          source = source.replace("    private String cpuInfo = null;\\n", "")
+          old_info = """            if (cpuInfo == null) {
+                          cpuInfo = "Box64 v"+ Box64Utils.extractBinVersion(cpuPanel.getContext());
+                      }
+
+          """
+          source = source.replace(old_info, "")
+          old_text = '            ((TextView)cpuPanel.getChildAt(1)).setText(CPUStatus.formatClockSpeed(maxClockSpeed)+" | "+cpuInfo);'
+          new_text = """            int cpuUsage = CPUStatus.getUsage();
+                      String cpuUsageText = cpuUsage >= 0 ? cpuUsage + "%" : "N/A";
+                      ((TextView)cpuPanel.getChildAt(1)).setText(CPUStatus.formatClockSpeed(maxClockSpeed)+" • "+cpuUsageText);"""
+          if old_text not in source:
+              raise SystemExit("FrameRating CPU display patch did not apply")
+          rating.write_text(source.replace(old_text, new_text, 1))
+          PY
+
       - name: Restore stable Android debug signing identity
         uses: actions/cache@v4
         with:
