@@ -159,7 +159,7 @@ object WinlatorRuntimeBridge {
             2 -> "960x540"
             3 -> "854x480"
             4 -> "640x360"
-            else -> "854x480"
+            else -> if (memoryForProfile(activity) <= 3L * 1024L * 1024L * 1024L) "640x360" else "854x480"
         }
         container.setScreenSize(resolution)
         container.setAudioDriver(if (prefs.getInt("audio_driver", 0) == 1) AudioDrivers.ALSA else AudioDrivers.PULSEAUDIO)
@@ -170,7 +170,9 @@ object WinlatorRuntimeBridge {
             3 -> GraphicsDrivers.TURNIP + "," + GraphicsDrivers.ZINK
             4 -> GraphicsDrivers.VORTEK + "," + GraphicsDrivers.VIRGL
             5 -> GraphicsDrivers.VORTEK + "," + GraphicsDrivers.ZINK
-            else -> GraphicsDrivers.getDefaultDriver(activity)
+            else -> if (memoryForProfile(activity) <= 3L * 1024L * 1024L * 1024L)
+                GraphicsDrivers.VORTEK + "," + GraphicsDrivers.VIRGL
+            else GraphicsDrivers.getDefaultDriver(activity)
         }
         container.setGraphicsDriver(graphicsDriver)
         val dxWrapper = when (prefs.getInt("renderer", 0)) {
@@ -192,7 +194,7 @@ object WinlatorRuntimeBridge {
         }
         container.setBox64Preset(box64Preset)
         container.setHUDMode(
-            if (prefs.getBoolean("performance_hud", true))
+            if (prefs.getBoolean("performance_hud", false))
                 com.winlator.widget.FrameRating.Mode.FULL.ordinal.toByte()
             else com.winlator.widget.FrameRating.Mode.DISABLED.ordinal.toByte()
         )
