@@ -1,7 +1,7 @@
-name: Build Castle Mobile 0.3.0 Android APK
+name: Build Castle Mobile 0.3.1 Android APK
 on:
   push:
-    branches: [ "main", "v0.3.0" ]
+    branches: [ "main", "ui-install-fix-0.3.1" ]
   workflow_dispatch:
 concurrency:
   group: castle-mobile-${{ github.ref }}
@@ -68,7 +68,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: CastleMobile-0.3.0-debug
+          name: CastleMobile-0.3.1-debug
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
