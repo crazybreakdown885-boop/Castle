@@ -5,10 +5,11 @@ Port Android baseado no runtime Winlator integrado ao próprio APK. O aplicativo
 ## V1.0.0
 
 - Winlator integrado no mesmo APK (não exige instalar o Winlator separadamente).
-- Importação da pasta completa do jogo por seletor de documentos Android.
+- Importação da pasta completa ou de um ZIP do jogo por seletor de documentos Android, com validação PE e proteção contra caminhos ZIP maliciosos.
 - Verificação PE para confirmar castle.exe Windows x86/32-bit.
 - Criação do contêiner Wine e cópia dos arquivos para o disco C:.
-- Configurações de resolução, áudio, DXVK/WineD3D e drivers gráficos.
+- Configurações de resolução, áudio, DXVK/WineD3D e drivers gráficos, com perfil automático conservador em aparelhos com até 3 GB de RAM.
+- HUD integrado de FPS, uso de CPU e RAM, ativado por padrão.
 - Controles virtuais Xbox e suporte do runtime a controles externos, teclado e mouse.
 - Descoberta de salas LAN experimental.
 - Identidade Android separada da versão de teste anterior para evitar conflito com assinaturas antigas.
@@ -20,7 +21,7 @@ O APK não inclui Castle.exe nem arquivos comerciais do jogo. Importe uma cópia
 A Release Castle Crashers V1 publica um único arquivo instalável:
 Castle-Crashers-v1.0.0-arm64.apk.
 
-O workflow verifica a presença do runtime integrado, das bibliotecas ARM64 e da assinatura antes de publicar. O APK de teste pequeno não será anexado à Release.
+O workflow verifica a presença do runtime integrado, das bibliotecas ARM64 e da assinatura antes de publicar. A identidade de assinatura de debug é mantida no cache do CI para reduzir falhas de atualização por conflito de assinatura. O APK de teste pequeno não será anexado à Release.
 
 ## Interface e arte
 
