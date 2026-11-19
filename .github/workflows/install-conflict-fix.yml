@@ -1,4 +1,4 @@
-name: Castle Crashers Android 1.0.2 — Package Conflict Fix
+name: Castle Crashers Android 1.0.3 — Menu and Startup Fix
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: castle-android-102-menu-performance
+  group: castle-android-103-menu-startup
   cancel-in-progress: true
 
 jobs:
@@ -142,19 +142,19 @@ jobs:
           grep -q "assets/rootfs.tzst" apk-files.txt
           grep -q "assets/box64/" apk-files.txt
           AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -n1)"
-          "$AAPT" dump badging "$APK" | grep -q "package: name='com.crazybreakdown.castlecrashers.mobile.v101' versionCode='10' versionName='1.0.2'"
+          "$AAPT" dump badging "$APK" | grep -q "package: name='com.crazybreakdown.castlecrashers.mobile.v101' versionCode='11' versionName='1.0.3'"
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n1)"
           "$APKSIGNER" verify --verbose "$APK"
           mkdir -p release
-          cp "$APK" release/Castle-Crashers-v1.0.2-arm64.apk
-          sha256sum release/Castle-Crashers-v1.0.2-arm64.apk > release/SHA256SUMS.txt
+          cp "$APK" release/Castle-Crashers-v1.0.3-arm64.apk
+          sha256sum release/Castle-Crashers-v1.0.3-arm64.apk > release/SHA256SUMS.txt
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Castle-Crashers-v1.0.2-ARM64
+          name: Castle-Crashers-v1.0.3-ARM64
           path: |
-            release/Castle-Crashers-v1.0.2-arm64.apk
+            release/Castle-Crashers-v1.0.3-arm64.apk
             release/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 30
@@ -163,14 +163,14 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.2
-          name: Castle Crashers V1.0.2
+          tag_name: v1.0.3
+          name: Castle Crashers V1.0.3
           make_latest: true
           overwrite_files: true
           files: |
-            release/Castle-Crashers-v1.0.2-arm64.apk
+            release/Castle-Crashers-v1.0.3-arm64.apk
             release/SHA256SUMS.txt
           fail_on_unmatched_files: true
           body: |
-            Castle Crashers Android 1.0.2 — package identity isolated from previous APKs.
+            Castle Crashers Android 1.0.3 — original game artwork and safer first-run Wine startup.
             Includes embedded Winlator/Wine/Box64 runtime. Bring your own legally obtained game files.
