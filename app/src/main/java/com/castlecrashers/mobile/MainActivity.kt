@@ -2,6 +2,7 @@ package com.castlecrashers.mobile
 
 
 import androidx.appcompat.app.AppCompatActivity
+import com.winlator.R
 import android.app.AlertDialog
 import android.content.Intent
 import android.hardware.input.InputManager
@@ -53,7 +54,12 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         )
         val page = FrameLayout(this).apply { setBackgroundColor(0xff17233a.toInt()) }
-        page.addView(CastleMenuArtView(this), FrameLayout.LayoutParams(-1, -1))
+        val artwork = ImageView(this).apply {
+            setImageResource(R.drawable.castle_header)
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            contentDescription = "Arte oficial de Castle Crashers"
+        }
+        page.addView(artwork, FrameLayout.LayoutParams(-1, -1))
         val panelWidth = (resources.displayMetrics.widthPixels * 0.43f).toInt().coerceAtLeast(dp(300))
         val menu = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
