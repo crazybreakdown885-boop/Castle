@@ -9,7 +9,7 @@ Port Android baseado no runtime Winlator integrado ao próprio APK. O aplicativo
 - Verificação PE para confirmar castle.exe Windows x86/32-bit.
 - Criação do contêiner Wine e cópia dos arquivos para o disco C:.
 - Configurações de resolução, áudio, DXVK/WineD3D e drivers gráficos, com perfil automático conservador em aparelhos com até 3 GB de RAM e seleção de preset Box64.
-- HUD integrado de FPS, uso de CPU e RAM, ativado por padrão.
+- HUD integrado de FPS, uso percentual de CPU, frequência do processador e RAM, ativado por padrão.
 - Controles virtuais Xbox e suporte do runtime a controles externos, teclado e mouse.
 - Descoberta de salas LAN experimental.
 - Identidade de pacote e autoridade FileProvider próprias, para coexistir com o Winlator instalado e evitar conflitos de instalação.
