@@ -90,22 +90,25 @@ class MainActivity : AppCompatActivity(), InputManager.InputDeviceListener {
         })
         menu.addView(gap(20))
         menu.addView(menuButton("LOCAL GAME", 0xffd2a65e.toInt()) { startGame() })
-        menu.addView(menuButton("XBOX LIVE", 0xff8c4540.toInt()) {
+        menu.addView(menuButton("ONLINE MULTIPLAYER", 0xff5596e8.toInt()) {
             AlertDialog.Builder(this).setTitle("XBOX LIVE")
                 .setMessage("O multiplayer online do jogo original depende dos serviços da plataforma. Nesta versão, a conexão online ainda não está implementada.")
                 .setPositiveButton("OK", null).show()
         })
-        menu.addView(menuButton("HELP & OPTIONS", 0xffa18b69.toInt()) { settings() })
-        menu.addView(menuButton("LEADERBOARDS", 0xff756b59.toInt()) {
-            AlertDialog.Builder(this).setTitle("LEADERBOARDS")
-                .setMessage("Os placares online do jogo original ainda não estão disponíveis nesta versão.")
-                .setPositiveButton("OK", null).show()
-        })
-        menu.addView(menuButton("CREDITS", 0xff75604b.toInt()) {
-            AlertDialog.Builder(this).setTitle("CASTLE CRASHERS")
-                .setMessage("Castle Crashers é uma criação da The Behemoth.\n\nEste launcher Android integra o runtime Winlator para executar uma cópia legítima do jogo para Windows.")
-                .setPositiveButton("OK", null).show()
-        })
+        menu.addView(menuButton("HELP & OPTIONS", 0xff63b86b.toInt()) { settings() })
+        menu.addView(menuButton("DOWNLOAD CONTENT", 0xffa45de0.toInt()) { chooseFolder() })
+        val quickActions = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = android.view.Gravity.CENTER }
+        quickActions.addView(menuFooterButton("TROPHIES", 0xffc84d4d.toInt()) {
+            AlertDialog.Builder(this).setTitle("TROPHIES").setMessage("Conquistas online ainda não estão integradas.").setPositiveButton("OK", null).show()
+        }, LinearLayout.LayoutParams(0, dp(34), 1f))
+        quickActions.addView(menuFooterButton("STATS", 0xffc84d4d.toInt()) {
+            AlertDialog.Builder(this).setTitle("STATS").setMessage("Estatísticas locais serão exibidas aqui.").setPositiveButton("OK", null).show()
+        }, LinearLayout.LayoutParams(0, dp(34), 1f))
+        quickActions.addView(menuFooterButton("RANK", 0xffc84d4d.toInt()) {
+            AlertDialog.Builder(this).setTitle("LEADERBOARDS").setMessage("Os placares online ainda não estão disponíveis.").setPositiveButton("OK", null).show()
+        }, LinearLayout.LayoutParams(0, dp(34), 1f))
+        menu.addView(quickActions)
+        menu.addView(menuButton("QUIT", 0xff55545a.toInt()) { finish() })
         menu.addView(gap(12))
         menu.addView(text("A  SELECT                         B  BACK", 9f, 0xffdfc99f.toInt()).apply {
             gravity = android.view.Gravity.CENTER
