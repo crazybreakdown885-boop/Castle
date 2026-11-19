@@ -27,10 +27,10 @@
 
 ## CI build and package verification
 
-GitHub Actions run **44598212504** completed successfully on commit `9d59dad4126b6517207a0e744a26dc0e817b9c0f`.
+GitHub Actions run **44598256750** completed successfully on commit `259845380581c26d49cf18de0bfbc2c67e81031e`.
 
 - Artifact: `CastleMobile-0.3.0-debug`
-- APK artifact size: 160,824,665 bytes
+- APK artifact size: 160,824,710 bytes
 - CI also checked that the APK contains the rootfs, container pattern, Box64, PulseAudio, virtual gamepad profile, zstd JNI library and Winlator/Vortek/Gladio/VirGL/MIDI native libraries.
 
 This confirms the Android project compiles and the required runtime payload is embedded in the APK. It does **not** prove that Castle Crashers launches or runs smoothly on the Moto G7 Play; that device test is intentionally left to the user.
