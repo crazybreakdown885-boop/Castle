@@ -172,6 +172,11 @@ object WinlatorRuntimeBridge {
         }
         container.setGraphicsDriver(graphicsDriver)
         container.setDXWrapper(if (prefs.getInt("renderer", 0) == 1) DXWrappers.WINED3D else DXWrappers.DXVK)
+        container.setHUDMode(
+            if (prefs.getBoolean("performance_hud", true))
+                com.winlator.widget.FrameRating.Mode.FULL.ordinal()
+            else com.winlator.widget.FrameRating.Mode.DISABLED.ordinal()
+        )
         container.saveData()
     }
 
