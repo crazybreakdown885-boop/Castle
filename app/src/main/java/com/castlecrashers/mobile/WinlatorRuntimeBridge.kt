@@ -45,7 +45,9 @@ object WinlatorRuntimeBridge {
         val rootFS = RootFS.find(activity)
         onStatus("Preparando o runtime Windows integrado…")
         try {
-            RootFSInstaller.installIfNeeded(activity)
+            if (!rootFS.isValid() || rootFS.version < RootFSInstaller.LATEST_VERSION.toInt()) {
+                RootFSInstaller.install(activity)
+            }
         } catch (error: Exception) {
             onStatus("Falha ao iniciar a instalação do runtime: ${error.message}")
             return
