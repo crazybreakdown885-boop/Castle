@@ -142,10 +142,10 @@ jobs:
 
           # Report extraction exceptions instead of leaving the launcher stuck on installing.
           execute_anchor = """        Executors.newSingleThreadExecutor().execute(() -> {
-                      clearRootDir(rootDir);"""
+            clearRootDir(rootDir);"""
           execute_wrapped = """        Executors.newSingleThreadExecutor().execute(() -> {
                       try {
-                          clearRootDir(rootDir);"""
+            clearRootDir(rootDir);"""
           if "catch (Throwable castleInstallError)" not in s:
               if execute_anchor not in s: raise SystemExit("RootFS extraction executor start point missing")
               s = s.replace(execute_anchor, execute_wrapped, 1)
