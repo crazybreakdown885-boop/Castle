@@ -1,4 +1,4 @@
-name: Castle Crashers Android 1.0.4 — Runtime and Original Menu
+name: Castle Crashers Android 1.0.5 — Runtime and Original Menu
 
 on:
   push:
@@ -109,65 +109,43 @@ jobs:
               raise SystemExit("Winlator FileProvider authority not found")
           p.write_text(s.replace("com.winlator.FileProvider", "com.crazybreakdown.castlecrashers.mobile.v101.FileProvider"))
 
-          # Let the Castle launcher detect a failed RootFS extraction.
+          # Make first-run RootFS extraction failures visible instead of hanging forever.
           p = root / "xenvironment/RootFSInstaller.java"
           s = p.read_text()
           anchor = "        final File rootDir = rootFS.getRootDir();"
-          state_init = anchor + """
+          if "castle_rootfs_install_state" not in s:
+              if anchor not in s: raise SystemExit("RootFS state init patch point missing")
+              s = s.replace(anchor, anchor + """
                   final File castleState = new File(activity.getFilesDir(), ".castle_rootfs_install_state");
                   try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
                       out.write("installing".getBytes(java.nio.charset.StandardCharsets.UTF_8));
                   } catch (Exception ignored) {}
-          """
-          if "castle_rootfs_install_state" not in s:
-              if anchor not in s: raise SystemExit("RootFS state init patch point missing")
-              s = s.replace(anchor, state_init, 1)
-          old_state = """            if (success) {
-                          rootFS.createRFSVersionFile(LATEST_VERSION);
-                          resetContainerRFSVersions(activity);
-                      }
-                      else AppUtils.showToast(activity, R.string.unable_to_install_system_files);"""
-          new_state = """            if (success) {
-                          rootFS.createRFSVersionFile(LATEST_VERSION);
-                          resetContainerRFSVersions(activity);
-                      }
-                      else AppUtils.showToast(activity, R.string.unable_to_install_system_files);
-                      try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
-                          out.write((success ? "ready" : "failed").getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                      } catch (Exception ignored) {}"""
-          if 'out.write((success ? "ready" : "failed")' not in s:
-              if old_state not in s: raise SystemExit("RootFS state completion patch point missing")
-              s = s.replace(old_state, new_state, 1)
+          """, 1)
+          if "out.write((success ? \"ready\" : \"failed\")" not in s:
+              marker = "            dialog.closeOnUiThread();"
+              if marker not in s: raise SystemExit("RootFS completion marker missing")
+              s = s.replace(marker, """            try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
+                  out.write((success ? "ready" : "failed").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+              } catch (Exception ignored) {}
+          """ + marker, 1)
+          if "catch (Throwable castleInstallError)" not in s:
+              start = s.index("        Executors.newSingleThreadExecutor().execute(() -> {")
+              line_end = s.index("\n", start) + 1
+              close = s.index("            dialog.closeOnUiThread();", line_end)
+              lambda_end = s.index("        });", close)
+              s = s[:line_end] + "            try {\n" + s[line_end:lambda_end] + """            } catch (Throwable castleInstallError) {
+                  castleInstallError.printStackTrace();
+                  try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
+                      out.write("failed".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                  } catch (Exception ignored) {}
+                  dialog.closeOnUiThread();
+          """ + s[lambda_end:]
           p.write_text(s)
 
-          # Report extraction exceptions instead of leaving the launcher stuck on installing.
-          execute_anchor = """        Executors.newSingleThreadExecutor().execute(() -> {
-            clearRootDir(rootDir);"""
-          execute_wrapped = """        Executors.newSingleThreadExecutor().execute(() -> {
-                      try {
-            clearRootDir(rootDir);"""
-          if "catch (Throwable castleInstallError)" not in s:
-              if execute_anchor not in s: raise SystemExit("RootFS extraction executor start point missing")
-              s = s.replace(execute_anchor, execute_wrapped, 1)
-              close_anchor = """            dialog.closeOnUiThread();
-                  });"""
-              close_wrapped = """            dialog.closeOnUiThread();
-                      } catch (Throwable castleInstallError) {
-                          castleInstallError.printStackTrace();
-                          try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
-                              out.write("failed".getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                          } catch (Exception ignored) {}
-                          dialog.closeOnUiThread();
-                      }
-                  });"""
-              if close_anchor not in s: raise SystemExit("RootFS extraction executor end point missing")
-              s = s.replace(close_anchor, close_wrapped, 1)
-
-          # Ensure container creation always reports a result to the launcher.
+          # Always return a callback if asynchronous container creation throws.
           p = root / "container/ContainerManager.java"
           s = p.read_text()
-          old = """            final Container container = createContainer(data);
-                      handler.post(() -> callback.call(container));"""
+          old = "            final Container container = createContainer(data);\n            handler.post(() -> callback.call(container));"
           new = """            Container container;
                       try {
                           container = createContainer(data);
@@ -215,17 +193,17 @@ jobs:
           grep -q "assets/rootfs.tzst" apk-files.txt
           grep -q "assets/box64/" apk-files.txt
           AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -n1)"
-          "$AAPT" dump badging "$APK" | grep -q "package: name='com.crazybreakdown.castlecrashers.mobile.v101' versionCode='13' versionName='1.0.4'"
+          "$AAPT" dump badging "$APK" | grep -q "package: name='com.crazybreakdown.castlecrashers.mobile.v101' versionCode='13' versionName='1.0.5'"
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n1)"
           "$APKSIGNER" verify --verbose "$APK"
           mkdir -p release
-          cp "$APK" release/Castle-Crashers-v1.0.4-arm64.apk
+          cp "$APK" release/Castle-Crashers-v1.0.5-arm64.apk
           sha256sum release/Castle-Crashers-v1.0.4-arm64.apk > release/SHA256SUMS.txt
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Castle-Crashers-v1.0.4-ARM64
+          name: Castle-Crashers-v1.0.5-ARM64
           path: |
             release/Castle-Crashers-v1.0.4-arm64.apk
             release/SHA256SUMS.txt
@@ -236,8 +214,8 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.4
-          name: Castle Crashers V1.0.4
+          tag_name: v1.0.5
+          name: Castle Crashers V1.0.5
           make_latest: true
           overwrite_files: true
           files: |
