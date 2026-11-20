@@ -101,7 +101,18 @@ object WinlatorRuntimeBridge {
             val manager = ContainerManager(activity)
             val existing = manager.containers.firstOrNull { it.name == CONTAINER_NAME }
             if (existing != null) {
-                prepareAndLaunch(activity, manager, existing, gameFolder, gameExe, onStatus)
+                val winePrefix = File(existing.rootDir, ".wine")
+                val prefixReady = File(winePrefix, "system.reg").isFile &&
+                    File(winePrefix, "drive_c/windows").isDirectory &&
+                    File(winePrefix, "drive_c/windows/system32").isDirectory
+                if (prefixReady) {
+                    prepareAndLaunch(activity, manager, existing, gameFolder, gameExe, onStatus)
+                } else {
+                    onStatus("Reparando o prefixo Wine incompleto…")
+                    manager.removeContainerAsync(existing) {
+                        getOrCreateContainer(activity, gameFolder, gameExe, onStatus)
+                    }
+                }
                 return
             }
             onStatus("Criando prefixo Wine para Castle Crashers…")
