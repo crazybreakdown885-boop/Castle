@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: castle-android-104-runtime-menu
+  group: castle-android-105-runtime-menu
   cancel-in-progress: true
 
 jobs:
@@ -140,6 +140,29 @@ jobs:
               s = s.replace(old_state, new_state, 1)
           p.write_text(s)
 
+          # Report extraction exceptions instead of leaving the launcher stuck on installing.
+          execute_anchor = """        Executors.newSingleThreadExecutor().execute(() -> {
+                      clearRootDir(rootDir);"""
+          execute_wrapped = """        Executors.newSingleThreadExecutor().execute(() -> {
+                      try {
+                          clearRootDir(rootDir);"""
+          if "catch (Throwable castleInstallError)" not in s:
+              if execute_anchor not in s: raise SystemExit("RootFS extraction executor start point missing")
+              s = s.replace(execute_anchor, execute_wrapped, 1)
+              close_anchor = """            dialog.closeOnUiThread();
+                  });"""
+              close_wrapped = """            dialog.closeOnUiThread();
+                      } catch (Throwable castleInstallError) {
+                          castleInstallError.printStackTrace();
+                          try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
+                              out.write("failed".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                          } catch (Exception ignored) {}
+                          dialog.closeOnUiThread();
+                      }
+                  });"""
+              if close_anchor not in s: raise SystemExit("RootFS extraction executor end point missing")
+              s = s.replace(close_anchor, close_wrapped, 1)
+
           # Ensure container creation always reports a result to the launcher.
           p = root / "container/ContainerManager.java"
           s = p.read_text()
@@ -192,7 +215,7 @@ jobs:
           grep -q "assets/rootfs.tzst" apk-files.txt
           grep -q "assets/box64/" apk-files.txt
           AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -n1)"
-          "$AAPT" dump badging "$APK" | grep -q "package: name='com.crazybreakdown.castlecrashers.mobile.v101' versionCode='12' versionName='1.0.4'"
+          "$AAPT" dump badging "$APK" | grep -q "package: name='com.crazybreakdown.castlecrashers.mobile.v101' versionCode='13' versionName='1.0.4'"
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n1)"
           "$APKSIGNER" verify --verbose "$APK"
           mkdir -p release
