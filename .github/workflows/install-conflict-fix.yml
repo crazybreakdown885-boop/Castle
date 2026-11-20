@@ -198,14 +198,14 @@ jobs:
           "$APKSIGNER" verify --verbose "$APK"
           mkdir -p release
           cp "$APK" release/Castle-Crashers-v1.0.5-arm64.apk
-          sha256sum release/Castle-Crashers-v1.0.4-arm64.apk > release/SHA256SUMS.txt
+          sha256sum release/Castle-Crashers-v1.0.5-arm64.apk > release/SHA256SUMS.txt
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: Castle-Crashers-v1.0.5-ARM64
           path: |
-            release/Castle-Crashers-v1.0.4-arm64.apk
+            release/Castle-Crashers-v1.0.5-arm64.apk
             release/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 30
@@ -219,9 +219,9 @@ jobs:
           make_latest: true
           overwrite_files: true
           files: |
-            release/Castle-Crashers-v1.0.4-arm64.apk
+            release/Castle-Crashers-v1.0.5-arm64.apk
             release/SHA256SUMS.txt
           fail_on_unmatched_files: true
           body: |
-            Castle Crashers Android 1.0.4 — original game artwork and safer first-run Wine startup.
+            Castle Crashers Android 1.0.5 — safer first-run Wine startup and embedded Winlator runtime.
             Includes embedded Winlator/Wine/Box64 runtime. Bring your own legally obtained game files.
