@@ -1,4 +1,4 @@
-name: Castle Crashers Android 1.0.5 — Runtime and Original Menu
+name: Castle Crashers Android 1.0.6 — Runtime and Original Menu
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: castle-android-105-runtime-menu
+  group: castle-android-106-runtime-menu
   cancel-in-progress: true
 
 jobs:
@@ -182,6 +182,36 @@ jobs:
           p.write_text(s)
           PY
 
+      - name: Recover interrupted Winlator container creation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("vendor/winlator-app/app/src/main/java/com/winlator/container/ContainerManager.java")
+          s = p.read_text()
+          old = '''                            JSONObject data = new JSONObject(FileUtils.readString(container.getConfigFile()));
+                            container.loadData(data);'''
+          new = '''                            if (!container.getConfigFile().isFile()) {
+                                FileUtils.delete(file);
+                                continue;
+                            }
+                            JSONObject data = new JSONObject(FileUtils.readString(container.getConfigFile()));
+                            container.loadData(data);'''
+          if old not in s:
+              raise SystemExit("Container scan recovery patch point not found")
+          s = s.replace(old, new, 1)
+          old = '''            File containerDir = new File(homeDir, RootFS.USER+"-"+id);
+            if (!containerDir.mkdirs()) return null;'''
+          new = '''            File containerDir = new File(homeDir, RootFS.USER+"-"+id);
+            // A previous process may have been killed while extracting the prefix.
+            // Remove an incomplete directory before retrying the same container ID.
+            if (containerDir.exists()) FileUtils.delete(containerDir);
+            if (!containerDir.mkdirs()) return null;'''
+          if old not in s:
+              raise SystemExit("Container creation recovery patch point not found")
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
+
       - name: Verify isolated package identity
         run: |
           grep -q 'applicationId = "com.crazybreakdown.castlecrashers.mobile.v101"' app/build.gradle.kts
@@ -214,19 +244,19 @@ jobs:
           grep -q "assets/rootfs.tzst" apk-files.txt
           grep -q "assets/box64/" apk-files.txt
           AAPT="$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -n1)"
-          "$AAPT" dump badging "$APK" | grep -q "package: name='com.crazybreakdown.castlecrashers.mobile.v101' versionCode='13' versionName='1.0.5'"
+          "$AAPT" dump badging "$APK" | grep -q "package: name='com.crazybreakdown.castlecrashers.mobile.v101' versionCode='14' versionName='1.0.6'"
           APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n1)"
           "$APKSIGNER" verify --verbose "$APK"
           mkdir -p release
-          cp "$APK" release/Castle-Crashers-v1.0.5-arm64.apk
-          sha256sum release/Castle-Crashers-v1.0.5-arm64.apk > release/SHA256SUMS.txt
+          cp "$APK" release/Castle-Crashers-v1.0.6-arm64.apk
+          sha256sum release/Castle-Crashers-v1.0.6-arm64.apk > release/SHA256SUMS.txt
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Castle-Crashers-v1.0.5-ARM64
+          name: Castle-Crashers-v1.0.6-ARM64
           path: |
-            release/Castle-Crashers-v1.0.5-arm64.apk
+            release/Castle-Crashers-v1.0.6-arm64.apk
             release/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 30
@@ -235,14 +265,14 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.5
-          name: Castle Crashers V1.0.5
+          tag_name: v1.0.6
+          name: Castle Crashers V1.0.6
           make_latest: true
           overwrite_files: true
           files: |
-            release/Castle-Crashers-v1.0.5-arm64.apk
+            release/Castle-Crashers-v1.0.6-arm64.apk
             release/SHA256SUMS.txt
           fail_on_unmatched_files: true
           body: |
-            Castle Crashers Android 1.0.5 — safer first-run Wine startup and embedded Winlator runtime.
+            Castle Crashers Android 1.0.6 — safer first-run Wine startup and embedded Winlator runtime.
             Includes embedded Winlator/Wine/Box64 runtime. Bring your own legally obtained game files.
