@@ -12,8 +12,8 @@ android {
         applicationId = "com.crazybreakdown.castlecrashers.mobile.v101"
         minSdk = 26
         targetSdk = 35
-        versionCode = 12
-        versionName = "1.0.4"
+        versionCode = 13
+        versionName = "1.0.5"
         ndk { abiFilters += "arm64-v8a" }
         externalNativeBuild {
             cmake { cppFlags += listOf("-std=c++17") }
