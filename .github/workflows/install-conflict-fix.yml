@@ -182,36 +182,6 @@ jobs:
           p.write_text(s)
           PY
 
-      - name: Recover interrupted Winlator container creation
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path("vendor/winlator-app/app/src/main/java/com/winlator/container/ContainerManager.java")
-          s = p.read_text()
-          old = '''                            JSONObject data = new JSONObject(FileUtils.readString(container.getConfigFile()));
-                            container.loadData(data);'''
-          new = '''                            if (!container.getConfigFile().isFile()) {
-                                FileUtils.delete(file);
-                                continue;
-                            }
-                            JSONObject data = new JSONObject(FileUtils.readString(container.getConfigFile()));
-                            container.loadData(data);'''
-          if old not in s:
-              raise SystemExit("Container scan recovery patch point not found")
-          s = s.replace(old, new, 1)
-          old = '''            File containerDir = new File(homeDir, RootFS.USER+"-"+id);
-            if (!containerDir.mkdirs()) return null;'''
-          new = '''            File containerDir = new File(homeDir, RootFS.USER+"-"+id);
-            // A previous process may have been killed while extracting the prefix.
-            // Remove an incomplete directory before retrying the same container ID.
-            if (containerDir.exists()) FileUtils.delete(containerDir);
-            if (!containerDir.mkdirs()) return null;'''
-          if old not in s:
-              raise SystemExit("Container creation recovery patch point not found")
-          s = s.replace(old, new, 1)
-          p.write_text(s)
-          PY
-
       - name: Verify isolated package identity
         run: |
           grep -q 'applicationId = "com.crazybreakdown.castlecrashers.mobile.v101"' app/build.gradle.kts
