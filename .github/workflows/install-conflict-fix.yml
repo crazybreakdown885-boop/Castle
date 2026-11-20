@@ -109,37 +109,58 @@ jobs:
               raise SystemExit("Winlator FileProvider authority not found")
           p.write_text(s.replace("com.winlator.FileProvider", "com.crazybreakdown.castlecrashers.mobile.v101.FileProvider"))
 
-          # Make first-run RootFS extraction failures visible instead of hanging forever.
+          # Replace the installer method as a whole to keep Java braces and error handling valid.
           p = root / "xenvironment/RootFSInstaller.java"
           s = p.read_text()
-          anchor = "        final File rootDir = rootFS.getRootDir();"
-          if "castle_rootfs_install_state" not in s:
-              if anchor not in s: raise SystemExit("RootFS state init patch point missing")
-              s = s.replace(anchor, anchor + """
+          method_start = s.index("    public static void install(final AppCompatActivity activity) {")
+          method_end = s.index("    public static void installIfNeeded", method_start)
+          method = """    public static void install(final AppCompatActivity activity) {
+                  AppUtils.keepScreenOn(activity);
+                  RootFS rootFS = RootFS.find(activity);
+                  final File rootDir = rootFS.getRootDir();
                   final File castleState = new File(activity.getFilesDir(), ".castle_rootfs_install_state");
                   try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
                       out.write("installing".getBytes(java.nio.charset.StandardCharsets.UTF_8));
                   } catch (Exception ignored) {}
-          """, 1)
-          if "out.write((success ? \"ready\" : \"failed\")" not in s:
-              marker = "            dialog.closeOnUiThread();"
-              if marker not in s: raise SystemExit("RootFS completion marker missing")
-              s = s.replace(marker, """            try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
-                  out.write((success ? "ready" : "failed").getBytes(java.nio.charset.StandardCharsets.UTF_8));
-              } catch (Exception ignored) {}
-          """ + marker, 1)
-          if "catch (Throwable castleInstallError)" not in s:
-              start = s.index("        Executors.newSingleThreadExecutor().execute(() -> {")
-              line_end = s.index("\n", start) + 1
-              close = s.index("            dialog.closeOnUiThread();", line_end)
-              lambda_end = s.index("        });", close)
-              s = s[:line_end] + "            try {\n" + s[line_end:lambda_end] + """            } catch (Throwable castleInstallError) {
-                  castleInstallError.printStackTrace();
-                  try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
-                      out.write("failed".getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                  } catch (Exception ignored) {}
-                  dialog.closeOnUiThread();
-          """ + s[lambda_end:]
+                  SettingsFragment.resetPreferenceVersions(activity);
+                  final DownloadProgressDialog dialog = new DownloadProgressDialog(activity);
+                  dialog.show(R.string.installing_system_files);
+                  Executors.newSingleThreadExecutor().execute(() -> {
+                      try {
+                          clearRootDir(rootDir);
+                          final long contentLength = TarCompressorUtils.getContentLength(TarCompressorUtils.Type.ZSTD, activity, FILENAME, rootDir);
+                          AtomicLong totalSizeRef = new AtomicLong();
+                          boolean success = TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, activity, FILENAME, rootDir, (file, size) -> {
+                              if (size > 0) {
+                                  long totalSize = totalSizeRef.addAndGet(size);
+                                  final int progress = (int)(((float)totalSize / contentLength) * 100);
+                                  activity.runOnUiThread(() -> dialog.setProgress(progress));
+                              }
+                              return file;
+                          });
+                          if (success) {
+                              rootFS.createRFSVersionFile(LATEST_VERSION);
+                              resetContainerRFSVersions(activity);
+                          } else {
+                              AppUtils.showToast(activity, R.string.unable_to_install_system_files);
+                          }
+                          try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
+                              out.write((success ? "ready" : "failed").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                          } catch (Exception ignored) {}
+                      } catch (Throwable error) {
+                          error.printStackTrace();
+                          try (java.io.FileOutputStream out = new java.io.FileOutputStream(castleState)) {
+                              out.write("failed".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                          } catch (Exception ignored) {}
+                          AppUtils.showToast(activity, R.string.unable_to_install_system_files);
+                      } finally {
+                          dialog.closeOnUiThread();
+                      }
+                  });
+              }
+
+          """
+          s = s[:method_start] + method + s[method_end:]
           p.write_text(s)
 
           # Always return a callback if asynchronous container creation throws.
